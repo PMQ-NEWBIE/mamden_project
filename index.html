@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Billiard App</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- Table -->
+<div class="table"></div>
+
+<!-- Pockets -->
+<div class="pockets">
+  <div class="pocket tl"></div>
+  <div class="pocket tm"></div>
+  <div class="pocket tr"></div>
+  <div class="pocket bl"></div>
+  <div class="pocket bm"></div>
+  <div class="pocket br"></div>
+</div>
+
+<!-- Floating balls -->
+<div class="balls-deco" id="ballsDeco"></div>
+
+<!-- App (menu screens) -->
+<div id="app">
+
+  <!-- Logo -->
+  <div class="logo">
+    <h1>RA DẠIIII!</h1>
+    <div class="logo-line">
+      <span></span>
+      <div class="cue-ball"></div>
+      <span></span>
+    </div>
+    <p>Bảng điểm Billiards Số</p>
+    <p class="logo-credit">Built by PHAN WUAN</p>
+  </div>
+
+  <!-- Screen: Home -->
+  <div class="screen" id="screenHome">
+    <button class="btn btn-primary" onclick="goMode()">Bắt đầu</button>
+    <button class="btn btn-secondary btn-guide" onclick="openGuide()">Hướng dẫn</button>
+    <button class="btn btn-secondary" onclick="openSettings()">Cài đặt</button>
+  </div>
+
+  <!-- Screen: Chọn chế độ -->
+  <div class="screen hidden" id="screenMode">
+    <div class="mode-row">
+      <div class="mode-card" onclick="selectMode('race')">
+        <div class="mode-icon">🎱</div>
+        <div class="mode-label">Race</div>
+        <div class="mode-desc">Đua về đích — ai tới số trước thắng</div>
+      </div>
+      <div class="mode-card" onclick="selectMode('mam')">
+        <div class="mode-icon">🔵</div>
+        <div class="mode-label">Mâm</div>
+        <div class="mode-desc">Tính điểm theo mâm — đếm số bi</div>
+      </div>
+    </div>
+    <button class="btn btn-back btn" onclick="goHome()">← Quay lại</button>
+  </div>
+
+  <!-- Screen: Chọn số người chơi -->
+  <div class="screen hidden" id="screenPlayers">
+    <div class="screen-subtitle">Số người chơi</div>
+    <div class="pc-row">
+      <div class="pc-card" onclick="selectPlayers(2)">2</div>
+      <div class="pc-card" onclick="selectPlayers(3)">3</div>
+      <div class="pc-card" onclick="selectPlayers(4)">4</div>
+      <div class="pc-card" onclick="selectPlayers(5)">5</div>
+      <div class="pc-card" onclick="selectPlayers(6)">6</div>
+    </div>
+    <button class="btn btn-back btn" onclick="backToMode()">← Quay lại</button>
+  </div>
+
+</div>
+
+<!-- Game Screen (full overlay) -->
+<div id="screenGame" class="hidden">
+
+  <!-- Top bar -->
+  <div class="game-topbar">
+    <div class="game-topbar-left">
+      <button class="game-icon-btn" id="menuBtn" onclick="toggleMenu(event)">☰</button>
+      <button class="mam-undo-btn hidden" id="mamUndoBtn" onclick="undoMamScore()">Ctrl + Z</button>
+      <button class="game-icon-btn history-btn" id="historyBtn" onclick="toggleHistory()">LỊCH SỬ</button>
+    </div>
+    <div class="game-mode-label" id="gameModeLabel">RACE</div>
+    <div style="width:40px"></div>
+  </div>
+
+  <!-- Dropdown (ngoài topbar để tránh backdrop-filter stacking context) -->
+  <div class="game-dropdown hidden" id="gameDropdown">
+    <button class="dropdown-item" onclick="doReset()">
+      <span class="di-icon">🔄</span> Làm mới
+    </button>
+    <button class="dropdown-item di-exit" onclick="confirmExit()">
+      <span class="di-icon">🚪</span> Thoát
+    </button>
+  </div>
+
+  <!-- Score cards -->
+  <div class="game-cards-wrap" id="gameCardsWrap"></div>
+
+  <!-- Mâm score panel -->
+  <div class="mam-panel hidden" id="mamPanel">
+    <span class="mam-panel-label">Chọn điểm</span>
+    <div class="mam-btns">
+      <button class="mam-score-btn" onclick="applyMamScore(1)">+1</button>
+      <button class="mam-score-btn" onclick="applyMamScore(2)">+2</button>
+      <button class="mam-score-btn" onclick="applyMamScore(3)">+3</button>
+    </div>
+    <div class="mam-btns">
+      <button class="mam-score-btn mam-score-neg" onclick="applyMamScore(-1)">−1</button>
+      <button class="mam-score-btn mam-score-neg" onclick="applyMamScore(-2)">−2</button>
+      <button class="mam-score-btn mam-score-neg" onclick="applyMamScore(-3)">−3</button>
+    </div>
+    <div class="x2-row hidden" id="mamX2Row">
+      <button class="x2-btn" id="mamX2Btn" onclick="toggleX2()">✕ 2</button>
+    </div>
+    <div class="mam-players-note" id="mamPlayersNote">Chọn 2 người chơi</div>
+    <button class="mam-cancel-btn" onclick="cancelMamSelect()">✕</button>
+  </div>
+
+  <!-- Đền Làng overlay -->
+  <div class="den-lang-overlay hidden" id="denLangOverlay">
+    <div class="den-lang-panel">
+      <div class="den-lang-title">⚡ Đền Làng</div>
+      <div class="den-lang-player-name" id="denLangPlayerName"></div>
+      <div class="den-lang-btns">
+        <button class="den-lang-btn den-lang-pos" onclick="applyDenLang(1)">+1</button>
+        <button class="den-lang-btn den-lang-pos" onclick="applyDenLang(2)">+2</button>
+        <button class="den-lang-btn den-lang-pos" onclick="applyDenLang(3)">+3</button>
+      </div>
+      <div class="den-lang-btns">
+        <button class="den-lang-btn den-lang-neg" onclick="applyDenLang(-1)">−1</button>
+        <button class="den-lang-btn den-lang-neg" onclick="applyDenLang(-2)">−2</button>
+        <button class="den-lang-btn den-lang-neg" onclick="applyDenLang(-3)">−3</button>
+      </div>
+      <div class="x2-row hidden" id="denLangX2Row">
+        <button class="x2-btn" id="denLangX2Btn" onclick="toggleX2()">✕ 2</button>
+      </div>
+      <button class="den-lang-cancel" onclick="closeDenLangPanel()">✕</button>
+    </div>
+  </div>
+
+  <!-- Confirm exit overlay -->
+  <div class="confirm-overlay hidden" id="confirmOverlay">
+    <div class="confirm-box">
+      <div class="confirm-icon">⚠️</div>
+      <p class="confirm-msg">Khi thoát sẽ mất hết thông tin trận đấu</p>
+      <div class="confirm-btns">
+        <button class="confirm-btn confirm-no" onclick="closeConfirm()">Không</button>
+        <button class="confirm-btn confirm-yes" onclick="doExitGame()">Có</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="history-overlay hidden" id="historyOverlay">
+    <div class="history-panel">
+      <div class="history-header">
+        <div>Lịch sử điểm</div>
+        <button class="history-close-btn" onclick="toggleHistory()">✕</button>
+      </div>
+      <div class="history-list" id="historyList"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Guide overlay (global) -->
+<div class="settings-overlay hidden" id="guideOverlay">
+  <div class="settings-panel guide-panel">
+    <div class="settings-header">
+      <span>Hướng dẫn</span>
+      <button class="settings-close" onclick="closeGuide()">✕</button>
+    </div>
+    <div class="guide-body">
+
+      <div class="guide-section">
+        <div class="guide-section-title">🎮 Chế độ chơi</div>
+        <div class="guide-item">
+          <span class="guide-tag">Race</span>
+          Dùng nút <b>+</b> / <b>−</b> để cộng hoặc trừ điểm cho từng người. Điểm không thể âm.
+        </div>
+        <div class="guide-item">
+          <span class="guide-tag">Mâm</span>
+          Chạm vào 2 thẻ người chơi để chọn cặp đấu, sau đó chọn điểm <b>+1 / +2 / +3</b> (thắng) hoặc <b>−1 / −2 / −3</b> (thua).
+        </div>
+      </div>
+
+      <div class="guide-section">
+        <div class="guide-section-title">⚡ Đền Làng</div>
+        <div class="guide-item">
+          <b>Giữ 3 giây</b> vào bất kỳ thẻ người chơi nào trong chế độ Mâm để mở Đền Làng.
+        </div>
+        <div class="guide-item">
+          <span class="guide-tag guide-tag-green">+N</span>
+          Người được chọn nhận <b>+N × (số người − 1)</b>. Mỗi người còn lại bị <b>−N</b>.
+        </div>
+        <div class="guide-item">
+          <span class="guide-tag guide-tag-red">−N</span>
+          Người được chọn bị <b>−N × (số người − 1)</b>. Mỗi người còn lại nhận <b>+N</b>.
+        </div>
+      </div>
+
+      <div class="guide-section">
+        <div class="guide-section-title">✕ 2 &nbsp;Lỗ Mười</div>
+        <div class="guide-item">
+          Bật trong <b>Cài đặt</b> → nút <b>✕ 2</b> xuất hiện trong Mâm và Đền Làng.
+        </div>
+        <div class="guide-item">
+          Nhấn <b>✕ 2</b> để kích hoạt (sáng vàng), rồi chọn điểm — điểm sẽ được <b>nhân đôi</b>. Tự tắt sau mỗi lần dùng.
+        </div>
+      </div>
+
+      <div class="guide-section">
+        <div class="guide-section-title">↩ Ctrl + Z &nbsp;(Hoàn tác)</div>
+        <div class="guide-item">
+          Nút <b>Ctrl + Z</b> trên thanh trên xuất hiện sau mỗi lần tính điểm. Nhấn để hoàn tác lần cuối. Số trong ngoặc là số lần có thể hoàn tác.
+        </div>
+      </div>
+
+      <div class="guide-section">
+        <div class="guide-section-title">📋 Lịch Sử</div>
+        <div class="guide-item">
+          Nhấn <b>LỊCH SỬ</b> để xem toàn bộ sự kiện điểm. Sự kiện mới nhất hiển thị trên cùng, kèm số thứ tự.
+        </div>
+      </div>
+
+      <div class="guide-section">
+        <div class="guide-section-title">✏ Đổi tên người chơi</div>
+        <div class="guide-item">
+          Nhấn vào <b>tên</b> hoặc biểu tượng <b>✏</b> trên thẻ để chỉnh sửa tên. Tối đa 14 ký tự.
+        </div>
+      </div>
+
+      <div class="guide-section">
+        <div class="guide-section-title">☰ Menu</div>
+        <div class="guide-item">
+          <b>Làm mới</b> — reset điểm về 0, xoá lịch sử.<br>
+          <b>Thoát</b> — quay về màn hình chính.
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Settings overlay (global) -->
+<div class="settings-overlay hidden" id="settingsOverlay">
+  <div class="settings-panel">
+    <div class="settings-header">
+      <span>Cài đặt</span>
+      <button class="settings-close" onclick="closeSettings()">✕</button>
+    </div>
+    <div class="settings-body">
+      <div class="settings-row">
+        <div class="settings-row-info">
+          <div class="settings-row-label">x2 lỗ mười</div>
+          <div class="settings-row-desc">Hiện nút X2 trong mâm và đền làng</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="x2ToggleInput" onchange="toggleX2Setting()">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="app.min.js"></script>
+</body>
+</html>
