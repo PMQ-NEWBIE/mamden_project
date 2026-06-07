@@ -2,25 +2,155 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Billiard App</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+  <!-- ── Primary SEO ── -->
+  <title>Mâm Đền — App Tính Điểm Bida Online | Bảng Điểm Billiard Số</title>
+  <meta name="description" content="Mâm Đền – app tính điểm bida online miễn phí: bảng điểm billiard realtime, theo dõi trận đấu, lịch sử điểm, hoàn tác, chế độ Race &amp; Mâm Đền cho 2–6 người chơi. Giao diện premium, nhanh, dễ dùng trên điện thoại." />
+  <meta name="keywords" content="tính điểm bida, bảng điểm bida, app tính điểm billiard, web tính điểm bida, phần mềm tính điểm bida, billiard scoreboard, billiard score tracking, billiard match tracker, theo dõi trận bida, lịch sử trận đấu bida, mâm đền, đền làng, bida 8 bi, bida 9 bi, pool scoreboard, cue sports score, thống kê người chơi bida, bảng điểm realtime" />
+  <meta name="author" content="PHAN WUAN" />
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+  <meta name="theme-color" content="#0a0a0e" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="application-name" content="Mâm Đền" />
+  <meta name="apple-mobile-web-app-title" content="Mâm Đền" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="format-detection" content="telephone=no" />
+  <link rel="canonical" href="https://mamden.xyz/" />
+
+  <!-- ── Open Graph ── -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Mâm Đền" />
+  <meta property="og:title" content="Mâm Đền — App Tính Điểm Bida Online | Bảng Điểm Billiard Số" />
+  <meta property="og:description" content="Bảng điểm billiard realtime miễn phí: theo dõi trận đấu, lịch sử điểm, chế độ Race &amp; Mâm Đền cho 2–6 người chơi. Giao diện premium, nhanh, dễ dùng." />
+  <meta property="og:url" content="https://mamden.xyz/" />
+  <meta property="og:image" content="https://mamden.xyz/og-image.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Mâm Đền — App tính điểm bida online &amp; bảng điểm billiard số" />
+  <meta property="og:locale" content="vi_VN" />
+
+  <!-- ── Twitter Card ── -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Mâm Đền — App Tính Điểm Bida Online | Bảng Điểm Billiard Số" />
+  <meta name="twitter:description" content="Bảng điểm billiard realtime miễn phí: theo dõi trận đấu, lịch sử điểm, chế độ Race &amp; Mâm Đền cho 2–6 người chơi." />
+  <meta name="twitter:image" content="https://mamden.xyz/og-image.png" />
+
+  <!-- ── Icons & Fonts ── -->
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="apple-touch-icon" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="styles.css">
+
+  <!-- ── Structured Data (JSON-LD) ── -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "https://mamden.xyz/#website",
+        "url": "https://mamden.xyz/",
+        "name": "Mâm Đền",
+        "description": "App tính điểm bida online & bảng điểm billiard số realtime.",
+        "inLanguage": "vi-VN",
+        "publisher": { "@id": "https://mamden.xyz/#organization" }
+      },
+      {
+        "@type": "Organization",
+        "@id": "https://mamden.xyz/#organization",
+        "name": "Mâm Đền",
+        "url": "https://mamden.xyz/",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://mamden.xyz/og-image.png",
+          "width": 1200,
+          "height": 630
+        },
+        "founder": { "@type": "Person", "name": "PHAN WUAN" }
+      },
+      {
+        "@type": "WebApplication",
+        "@id": "https://mamden.xyz/#app",
+        "name": "Mâm Đền — App tính điểm bida",
+        "url": "https://mamden.xyz/",
+        "applicationCategory": "SportsApplication",
+        "operatingSystem": "Web, Android, iOS",
+        "browserRequirements": "Requires JavaScript. Requires HTML5.",
+        "inLanguage": "vi-VN",
+        "description": "Phần mềm tính điểm bida online: bảng điểm billiard realtime, theo dõi trận đấu, lịch sử điểm, hoàn tác, chế độ Race và Mâm Đền cho 2–6 người chơi.",
+        "featureList": [
+          "Bảng điểm bida realtime cho 2–6 người chơi",
+          "Chế độ Race và Mâm Đền (đền làng / quây)",
+          "Theo dõi điểm số, cộng/trừ trực tiếp",
+          "Lịch sử trận đấu và hoàn tác (undo)",
+          "Đổi tên người chơi, ✕2 lỗ mười, đi chấm",
+          "Minigame: vòng xoay may mắn, rút bài",
+          "Tự lưu & khôi phục ván đang chơi",
+          "Giữ màn hình luôn sáng khi tính điểm"
+        ],
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "VND"
+        },
+        "publisher": { "@id": "https://mamden.xyz/#organization" }
+      }
+    ]
+  }
+  </script>
 </head>
 <body>
 
+<!-- ── SEO content (semantic, accessible to crawlers & screen readers) ── -->
+<main class="sr-only" id="seoContent">
+  <h1>Mâm Đền — Phần mềm tính điểm bida online &amp; bảng điểm billiard số</h1>
+
+  <p>Mâm Đền là <strong>app tính điểm bida online</strong> miễn phí, biến điện thoại thành
+  <strong>bảng điểm billiard realtime</strong> sang trọng cho mọi trận đấu. Mở web là bắt đầu
+  <strong>theo dõi trận đấu</strong>, cộng trừ điểm và xem kết quả tức thì — không cài đặt,
+  không đăng ký.</p>
+
+  <h2>Bảng điểm bida realtime cho mọi thể loại</h2>
+  <p>Hỗ trợ <strong>tính điểm bida</strong> cho 2–6 người chơi, phù hợp bida lỗ (8 bi, 9 bi,
+  pool) lẫn các kèo nhóm tại câu lạc bộ. Mỗi người một thẻ điểm màu riêng, điểm số cập nhật
+  tức thời như một <strong>live match scoreboard</strong> chuyên nghiệp.</p>
+
+  <h2>Hai chế độ chơi: Race &amp; Mâm Đền</h2>
+  <p>Chế độ <strong>Race</strong> đua điểm — ai tới số trước thì thắng. Chế độ
+  <strong>Mâm Đền</strong> tính điểm mâm, <strong>đền làng</strong>, quây hoặc bị quây, có cả
+  ✕2 lỗ mười và "đi chấm" nhập điểm tay. Chọn cặp đấu chỉ bằng hai chạm.</p>
+
+  <h2>Theo dõi điểm, lịch sử trận đấu &amp; hoàn tác</h2>
+  <p>Mọi lần ghi điểm đều lưu vào <strong>lịch sử trận đấu</strong> kèm thời gian và có thể
+  <strong>hoàn tác</strong> (undo) từng bước. Ván đang chơi tự lưu và khôi phục khi mở lại —
+  không bao giờ mất điểm giữa chừng.</p>
+
+  <h2>Dành cho câu lạc bộ, nhóm bạn và giải đấu nội bộ</h2>
+  <p>Giao diện premium, tối giản, chạy mượt trên điện thoại lẫn máy tính — lý tưởng để
+  <strong>quản lý trận đấu</strong> tại quán bida, nhóm bạn hay các <strong>giải đấu nội bộ</strong>.
+  Tích hợp minigame vòng xoay may mắn và rút bài để chia kèo, tạo bàn nhanh.</p>
+
+  <h2>Tính năng nổi bật</h2>
+  <ul>
+    <li>Bảng điểm billiard số realtime cho 2–6 người chơi</li>
+    <li>Chế độ Race và Mâm Đền (đền làng, quây, ✕2 lỗ mười, đi chấm)</li>
+    <li>Cộng/trừ điểm trực tiếp, hoàn tác nhiều bước</li>
+    <li>Lịch sử điểm chi tiết theo thời gian</li>
+    <li>Đổi tên người chơi, tuỳ chỉnh số nút điểm</li>
+    <li>Minigame: vòng xoay may mắn &amp; rút bài</li>
+    <li>Tự lưu &amp; khôi phục ván đang chơi</li>
+    <li>Giữ màn hình luôn sáng khi đang tính điểm</li>
+  </ul>
+
+  <p>Bắt đầu <strong>tính điểm bida online</strong> ngay với Mâm Đền — bảng điểm billiard số
+  nhanh, đẹp và hoàn toàn miễn phí. Nhấn "Bắt đầu" để tạo bàn và mời bạn bè vào trận.</p>
+</main>
+
 <!-- Table -->
 <div class="table"></div>
-
-<!-- Pockets -->
-<div class="pockets">
-  <div class="pocket tl"></div>
-  <div class="pocket tm"></div>
-  <div class="pocket tr"></div>
-  <div class="pocket bl"></div>
-  <div class="pocket bm"></div>
-  <div class="pocket br"></div>
-</div>
 
 <!-- Floating balls -->
 <div class="balls-deco" id="ballsDeco"></div>
@@ -30,7 +160,7 @@
 
   <!-- Logo -->
   <div class="logo">
-    <h1>RA DẠIII!</h1>
+    <div class="logo-wordmark" aria-hidden="true">RA DẠIII!</div>
     <div class="logo-line">
       <span></span>
       <div class="cue-ball"></div>

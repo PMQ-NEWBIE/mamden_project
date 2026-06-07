@@ -1,0 +1,20 @@
+# robots.txt — Mâm Đền (https://mamden.xyz)
+# App tính điểm bida online & bảng điểm billiard số
+
+User-agent: *
+Allow: /
+
+# Cho phép các bot lớn crawl toàn bộ trang public
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+# Chặn thư mục build / thử nghiệm nội bộ (phòng khi vô tình deploy lên public)
+Disallow: /dist/
+Disallow: /premium/
+Disallow: /node_modules/
+
+# Sitemap
+Sitemap: https://mamden.xyz/sitemap.xml

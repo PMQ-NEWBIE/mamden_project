@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Sitemap — Mâm Đền (https://mamden.xyz)
+  App tính điểm bida là Single Page App: toàn bộ chức năng (tính điểm, lịch sử,
+  minigame, cài đặt) nằm trên 1 URL duy nhất. KHÔNG liệt kê URL không tồn tại
+  (vd /tournament, /players, /blog) vì sẽ trả về 404 và gây lỗi trong Search Console.
+
+  Khi bổ sung trang thật về sau (vd /blog, /huong-dan), chỉ cần thêm khối <url> mới.
+  Namespace xhtml đã sẵn sàng cho hreflang nếu làm đa ngôn ngữ.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://mamden.xyz/</loc>
+    <lastmod>2026-06-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>
