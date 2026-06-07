@@ -115,6 +115,7 @@
         <button class="mam-score-mode-btn seg-active" id="gameSegAuto" onclick="setMamScoreMode('auto')">Tự động</button>
         <button class="mam-score-mode-btn" id="gameSegManual" onclick="setMamScoreMode('manual')">Thủ công</button>
       </div>
+      <div class="mam-score-mode-note" id="gameModeNote">Chạm 2 thẻ để chọn cặp · Bảng điểm tự hiện ra</div>
       <div class="mam-score-mode-divider"></div>
       <div class="mam-score-mode-x2row">
         <div class="mam-score-mode-x2label">
@@ -126,16 +127,18 @@
           <span class="toggle-slider"></span>
         </label>
       </div>
-      <div class="mam-score-mode-divider"></div>
-      <div class="mam-score-mode-x2row">
-        <div class="mam-score-mode-x2label">
-          <div class="mam-score-mode-x2name">Số nút điểm</div>
-          <div class="mam-score-mode-x2desc">Số nút +/− trong mâm và đền làng (tối đa 12)</div>
-        </div>
-        <div class="score-count-ctrl">
-          <button class="score-count-btn" onclick="changeScoreCount(-1)">−</button>
-          <span class="score-count-val" id="scoreCountValGame">3</span>
-          <button class="score-count-btn" onclick="changeScoreCount(1)">＋</button>
+      <div id="gameScoreCountSection">
+        <div class="mam-score-mode-divider"></div>
+        <div class="mam-score-mode-x2row">
+          <div class="mam-score-mode-x2label">
+            <div class="mam-score-mode-x2name">Số nút điểm</div>
+            <div class="mam-score-mode-x2desc">Số nút +/− trong mâm và đền làng (tối đa 12)</div>
+          </div>
+          <div class="score-count-ctrl">
+            <button class="score-count-btn" onclick="changeScoreCount(-1)">−</button>
+            <span class="score-count-val" id="scoreCountValGame">3</span>
+            <button class="score-count-btn" onclick="changeScoreCount(1)">＋</button>
+          </div>
         </div>
       </div>
       <button class="mam-score-mode-close" onclick="closeMamScoreModeSelector()">✕</button>
@@ -474,7 +477,7 @@
           <span class="toggle-slider"></span>
         </label>
       </div>
-      <div class="settings-row">
+      <div class="settings-row" id="settingsScoreCountRow">
         <div class="settings-row-info">
           <div class="settings-row-label">Số nút điểm</div>
           <div class="settings-row-desc">Số nút +/− trong mâm và đền làng (tối đa 12)</div>
@@ -487,6 +490,13 @@
       </div>
     </div>
   </div>
+</div>
+
+<!-- Bộ đếm lượt truy cập thật -->
+<div class="visit-counter" id="visitCounter">
+  <span class="visit-dot"></span>
+  <span class="visit-label">Lượt truy cập</span>
+  <span class="visit-count" id="visitCount">…</span>
 </div>
 
 <script src="app.min.js"></script>
