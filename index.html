@@ -29,7 +29,7 @@
 
   <!-- Logo -->
   <div class="logo">
-    <h1>RA DẠIIII!</h1>
+    <h1>RA DẠIII!</h1>
     <div class="logo-line">
       <span></span>
       <div class="cue-ball"></div>
@@ -42,6 +42,7 @@
   <!-- Screen: Home -->
   <div class="screen" id="screenHome">
     <button class="btn btn-primary" onclick="goMode()">Bắt đầu</button>
+    <button class="btn btn-secondary btn-minigame" onclick="openMinigame()">🎲 Minigame 🎲</button>
     <button class="btn btn-secondary btn-guide" onclick="openGuide()">Hướng dẫn</button>
     <button class="btn btn-secondary" onclick="openSettings()">Cài đặt</button>
   </div>
@@ -52,12 +53,12 @@
       <div class="mode-card" onclick="selectMode('race')">
         <div class="mode-icon">🎱</div>
         <div class="mode-label">Race</div>
-        <div class="mode-desc">Đua về đích — ai tới số trước thắng</div>
+        <div class="mode-desc">Đua về đích ai tới số trước thắng</div>
       </div>
       <div class="mode-card" onclick="selectMode('mam')">
         <div class="mode-icon">🔵</div>
         <div class="mode-label">Mâm</div>
-        <div class="mode-desc">Tính điểm theo mâm — đếm số bi</div>
+        <div class="mode-desc">Tính điểm mâm đền, coi trừng vỡ mâm </div>
       </div>
     </div>
     <button class="btn btn-back btn" onclick="goHome()">← Quay lại</button>
@@ -97,9 +98,24 @@
     <button class="dropdown-item" onclick="doReset()">
       <span class="di-icon">🔄</span> Làm mới
     </button>
+    <button class="dropdown-item" onclick="openMamScoreModeSelector()">
+      <span class="di-icon">⚙️</span> Cách tính điểm
+    </button>
     <button class="dropdown-item di-exit" onclick="confirmExit()">
       <span class="di-icon">🚪</span> Thoát
     </button>
+  </div>
+
+  <!-- Mâm scoring mode selector overlay -->
+  <div class="mam-score-mode-overlay hidden" id="mamScoreModeOverlay">
+    <div class="mam-score-mode-panel">
+      <div class="mam-score-mode-title">⚙️ Cách tính điểm</div>
+      <div class="mam-score-mode-btns">
+        <button class="mam-score-mode-btn seg-active" id="gameSegAuto" onclick="setMamScoreMode('auto')">Tự động</button>
+        <button class="mam-score-mode-btn" id="gameSegManual" onclick="setMamScoreMode('manual')">Thủ công</button>
+      </div>
+      <button class="mam-score-mode-close" onclick="closeMamScoreModeSelector()">✕</button>
+    </div>
   </div>
 
   <!-- Score cards -->
@@ -143,6 +159,14 @@
       <div class="x2-row hidden" id="denLangX2Row">
         <button class="x2-btn" id="denLangX2Btn" onclick="toggleX2()">✕ 2</button>
       </div>
+      <div class="den-lang-cham">
+        <div class="den-lang-cham-label">Đi chấm</div>
+        <input type="number" inputmode="numeric" min="1" class="den-lang-cham-input" id="denLangChamInput" placeholder="Nhập số điểm" />
+        <div class="den-lang-cham-row">
+          <button class="den-lang-cham-btn den-lang-neg" onclick="applyDenLangCham(-1)">Đền Làng</button>
+          <button class="den-lang-cham-btn den-lang-pos" onclick="applyDenLangCham(1)">Làng Đền</button>
+        </div>
+      </div>
       <button class="den-lang-cancel" onclick="closeDenLangPanel()">✕</button>
     </div>
   </div>
@@ -169,6 +193,173 @@
     </div>
   </div>
 
+
+</div>
+
+<!-- Minigame chọn trò (global) -->
+<div class="settings-overlay hidden" id="minigameOverlay">
+  <div class="settings-panel minigame-panel">
+    <div class="settings-header">
+      <span>🎲 Minigame</span>
+      <button class="settings-close" onclick="closeMinigame()">✕</button>
+    </div>
+    <div class="minigame-body">
+      <div class="minigame-row">
+        <div class="minigame-card" onclick="openLuckyWheel()">
+          <div class="minigame-icon">🎡</div>
+          <div class="minigame-label">Vòng xoay may mắn</div>
+          <div class="minigame-desc">Quay vòng chọn ngẫu nhiên</div>
+        </div>
+        <div class="minigame-card" onclick="openCardDraw()">
+          <div class="minigame-icon">🃏</div>
+          <div class="minigame-label">Rút bài</div>
+          <div class="minigame-desc">Rút lá bài may rủi</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Vòng xoay may mắn (full screen) -->
+<div class="lw-overlay hidden" id="luckyWheelOverlay">
+  <div class="lw-topbar">
+    <button class="lw-back" onclick="closeLuckyWheel()">←</button>
+    <span class="lw-title">🎡 Vòng xoay may mắn</span>
+    <div style="width:40px"></div>
+  </div>
+
+  <div class="lw-input-row">
+    <input id="lwNameInput" class="lw-name-input" type="text" placeholder="Nhập tên rồi bấm ＋" maxlength="16" />
+    <button class="lw-add-btn" id="lwAddBtn" onclick="lwAddName()">＋</button>
+  </div>
+  <div class="lw-chips" id="lwChips"></div>
+
+  <div class="lw-stage">
+    <div class="lw-pointer"></div>
+    <svg class="lw-wheel" id="lwWheel" viewBox="0 0 320 320"></svg>
+    <button class="lw-hub" id="lwHub" onclick="lwSpin()">QUAY</button>
+  </div>
+
+  <div class="lw-result" id="lwResult"></div>
+
+  <!-- Create game dialog -->
+  <div class="lw-create-dialog hidden" id="lwCreateDialog">
+    <div class="lw-create-box">
+      <div class="lw-create-title">🏆 Tạo bàn ngay?</div>
+      <div class="lw-create-last" id="lwCreateLastName"></div>
+      <div class="lw-create-info" id="lwCreateInfo"></div>
+      <div class="lw-create-btns">
+        <button class="lw-create-btn lw-create-race" onclick="startGameFromLW('race')">🎱 Race</button>
+        <button class="lw-create-btn lw-create-mam" onclick="startGameFromLW('mam')">🔵 Mâm</button>
+      </div>
+      <button class="lw-create-cancel" onclick="closeLWCreateDialog()">Không, tiếp tục</button>
+    </div>
+  </div>
+</div>
+
+<!-- Rút bài (full screen) -->
+<div class="cd-overlay hidden" id="cardDrawOverlay">
+  <div class="cd-topbar">
+    <button class="cd-back" onclick="closeCardDraw()">←</button>
+    <span class="cd-title">🃏 Rút bài</span>
+    <div style="width:40px"></div>
+  </div>
+
+  <div class="cd-dealer">
+    <div class="cd-speech" id="cdSpeech">Bốc một lá đi nào~ 💕</div>
+    <svg class="cd-dealer-svg" viewBox="0 0 200 226" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="cdIris" cx="50%" cy="38%" r="62%">
+          <stop offset="0%" stop-color="#b39dff"/>
+          <stop offset="55%" stop-color="#7c4dff"/>
+          <stop offset="100%" stop-color="#4a2da0"/>
+        </radialGradient>
+      </defs>
+      <!-- hair back -->
+      <path d="M100 22 C58 22 44 58 46 102 C48 150 58 195 66 224 L80 224 C72 188 70 150 74 120 C78 100 88 92 100 92 C112 92 122 100 126 120 C130 150 128 188 120 224 L134 224 C142 195 152 150 154 102 C156 58 142 22 100 22 Z" fill="#2b2030"/>
+      <path d="M64 100 C62 140 66 185 72 215" stroke="#4a3a58" stroke-width="3" fill="none" opacity=".55"/>
+      <path d="M136 100 C138 140 134 185 128 215" stroke="#4a3a58" stroke-width="3" fill="none" opacity=".55"/>
+      <!-- shoulders skin -->
+      <path d="M64 224 C66 184 82 166 100 166 C118 166 134 184 136 224 Z" fill="#ffd9b3"/>
+      <!-- dress (sweetheart neckline) -->
+      <path d="M56 226 C58 196 78 184 100 198 C122 184 142 196 144 226 Z" fill="#c0143c"/>
+      <path d="M72 190 Q100 208 128 190" stroke="#e0556e" stroke-width="2.5" fill="none" opacity=".7"/>
+      <!-- neck -->
+      <rect x="91" y="120" width="18" height="30" rx="8" fill="#f5c79a"/>
+      <ellipse cx="100" cy="124" rx="16" ry="6" fill="#e8b585" opacity=".5"/>
+      <!-- choker -->
+      <rect x="86" y="138" width="28" height="6" rx="3" fill="#2a1f35"/>
+      <path d="M100 144 l-3 5 l3 3 l3 -3 z" fill="#7c4dff"/>
+      <!-- ears -->
+      <ellipse cx="66" cy="92" rx="6" ry="9" fill="#ffd0a3"/>
+      <ellipse cx="134" cy="92" rx="6" ry="9" fill="#ffd0a3"/>
+      <!-- face -->
+      <ellipse cx="100" cy="90" rx="35" ry="39" fill="#ffd9b3"/>
+      <!-- blush -->
+      <ellipse cx="78" cy="100" rx="9" ry="5.5" fill="#ff8a9a" opacity=".45"/>
+      <ellipse cx="122" cy="100" rx="9" ry="5.5" fill="#ff8a9a" opacity=".45"/>
+      <!-- eyes -->
+      <ellipse cx="82" cy="92" rx="10" ry="13" fill="#fff"/>
+      <ellipse cx="118" cy="92" rx="10" ry="13" fill="#fff"/>
+      <circle cx="83" cy="93" r="8" fill="url(#cdIris)"/>
+      <circle cx="117" cy="93" r="8" fill="url(#cdIris)"/>
+      <circle cx="83" cy="93" r="3.6" fill="#1a0f2a"/>
+      <circle cx="117" cy="93" r="3.6" fill="#1a0f2a"/>
+      <circle cx="86" cy="89" r="2.8" fill="#fff"/>
+      <circle cx="120" cy="89" r="2.8" fill="#fff"/>
+      <circle cx="80" cy="96" r="1.5" fill="#fff" opacity=".85"/>
+      <circle cx="114" cy="96" r="1.5" fill="#fff" opacity=".85"/>
+      <path d="M71 84 Q82 77 93 85" stroke="#241525" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <path d="M107 85 Q118 77 129 84" stroke="#241525" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <!-- eyebrows -->
+      <path d="M72 76 Q82 72 92 76" stroke="#3a2a40" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+      <path d="M108 76 Q118 72 128 76" stroke="#3a2a40" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+      <!-- nose -->
+      <path d="M99 100 q-2 4 2 4" stroke="#e8b585" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+      <!-- mouth -->
+      <path d="M91 110 Q100 119 109 110 Q100 114 91 110 Z" fill="#d6436a"/>
+      <path d="M93 111 Q100 115 107 111" stroke="#fff" stroke-width="1" fill="none" opacity=".4"/>
+      <!-- side bang locks -->
+      <path d="M62 84 C58 110 60 134 66 150 L74 148 C70 128 70 104 72 88 Z" fill="#2b2030"/>
+      <path d="M138 84 C142 110 140 134 134 150 L126 148 C130 128 130 104 128 88 Z" fill="#2b2030"/>
+      <!-- bangs -->
+      <path d="M62 84 C56 50 76 30 100 30 C124 30 144 50 138 84 C132 66 120 58 110 60 L106 78 C103 64 96 60 90 63 L86 80 C80 64 70 64 66 76 C64 80 63 82 62 84 Z" fill="#2b2030"/>
+      <path d="M98 34 C84 36 74 46 70 62" stroke="#4a3a58" stroke-width="2.5" fill="none" opacity=".5"/>
+      <!-- heart hair clip -->
+      <path d="M128 50 c-3 -4 -9 -3 -9 2 c0 4 9 9 9 9 c0 0 9 -5 9 -9 c0 -5 -6 -6 -9 -2 z" fill="#ff4d8d"/>
+    </svg>
+  </div>
+
+  <div class="cd-table">
+    <div class="cd-card" id="cdCard">
+      <div class="cd-card-inner">
+        <div class="cd-face cd-back">
+          <div class="cd-back-emblem">♠</div>
+        </div>
+        <div class="cd-face cd-front" id="cdCardFront"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cd-actions">
+    <button class="cd-draw-btn" id="cdDrawBtn" onclick="drawCard()">🃏 Bốc bài</button>
+    <button class="cd-create-open" onclick="showCDCreateDialog()">🏆 Tạo bàn</button>
+  </div>
+
+  <div class="cd-history" id="cdHistory"></div>
+
+  <!-- Create game dialog -->
+  <div class="lw-create-dialog hidden" id="cdCreateDialog">
+    <div class="lw-create-box">
+      <div class="lw-create-title">🏆 Tạo bàn</div>
+      <div class="lw-create-info">Chọn chế độ chơi</div>
+      <div class="lw-create-btns">
+        <button class="lw-create-btn lw-create-race" onclick="cdStartGame('race')">🎱 Race</button>
+        <button class="lw-create-btn lw-create-mam" onclick="cdStartGame('mam')">🔵 Mâm</button>
+      </div>
+      <button class="lw-create-cancel" onclick="closeCDCreateDialog()">Đóng</button>
+    </div>
+  </div>
 </div>
 
 <!-- Guide overlay (global) -->
@@ -193,17 +384,17 @@
       </div>
 
       <div class="guide-section">
-        <div class="guide-section-title">⚡ Đền Làng</div>
+        <div class="guide-section-title">⚡ Đền Làng | làng Đền ⚡</div>
         <div class="guide-item">
           <b>Giữ 3 giây</b> vào bất kỳ thẻ người chơi nào trong chế độ Mâm để mở Đền Làng.
         </div>
         <div class="guide-item">
-          <span class="guide-tag guide-tag-green">+N</span>
-          Người được chọn nhận <b>+N × (số người − 1)</b>. Mỗi người còn lại bị <b>−N</b>.
+          <span class="guide-tag guide-tag-green">+1 / +2 / +3</span>
+          Người được chọn nhận <b>Cộng điểm</b>. Mỗi người còn lại bị trừ <b>Điểm đã chọn</b>.
         </div>
         <div class="guide-item">
-          <span class="guide-tag guide-tag-red">−N</span>
-          Người được chọn bị <b>−N × (số người − 1)</b>. Mỗi người còn lại nhận <b>+N</b>.
+          <span class="guide-tag guide-tag-red">−1 / −2 / −3 </span>
+          Người được chọn bị <b>Trừ Điểm</b>. Mỗi người còn lại nhận <b>Điểm đã chọn</b>.
         </div>
       </div>
 
@@ -258,6 +449,16 @@
       <button class="settings-close" onclick="closeSettings()">✕</button>
     </div>
     <div class="settings-body">
+      <div class="settings-row">
+        <div class="settings-row-info">
+          <div class="settings-row-label">Cách tính điểm Mâm</div>
+          <div class="settings-row-desc" id="mamScoreModeDesc">Hiển thị bản lựa chọn + / -</div>
+        </div>
+        <div class="seg-control">
+          <button class="seg-btn seg-active" id="segAuto" onclick="setMamScoreMode('auto')">Tự động</button>
+          <button class="seg-btn" id="segManual" onclick="setMamScoreMode('manual')">Thủ công</button>
+        </div>
+      </div>
       <div class="settings-row">
         <div class="settings-row-info">
           <div class="settings-row-label">x2 lỗ mười</div>
