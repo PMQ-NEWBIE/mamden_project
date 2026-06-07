@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Billiard App</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -56,9 +57,9 @@
         <div class="mode-desc">Đua về đích ai tới số trước thắng</div>
       </div>
       <div class="mode-card" onclick="selectMode('mam')">
-        <div class="mode-icon">🔵</div>
-        <div class="mode-label">Mâm</div>
-        <div class="mode-desc">Tính điểm mâm đền, coi trừng vỡ mâm </div>
+        <div class="mode-icon">☢️</div>
+        <div class="mode-label">Mâm Đền</div>
+        <div class="mode-desc">Tính điểm mâm đền, <b>Quây</b> hoặc bị <b>Quây</b> </div>
       </div>
     </div>
     <button class="btn btn-back btn" onclick="goHome()">← Quay lại</button>
@@ -95,7 +96,7 @@
 
   <!-- Dropdown (ngoài topbar để tránh backdrop-filter stacking context) -->
   <div class="game-dropdown hidden" id="gameDropdown">
-    <button class="dropdown-item" onclick="doReset()">
+    <button class="dropdown-item" onclick="confirmReset()">
       <span class="di-icon">🔄</span> Làm mới
     </button>
     <button class="dropdown-item" onclick="openMamScoreModeSelector()">
@@ -114,6 +115,29 @@
         <button class="mam-score-mode-btn seg-active" id="gameSegAuto" onclick="setMamScoreMode('auto')">Tự động</button>
         <button class="mam-score-mode-btn" id="gameSegManual" onclick="setMamScoreMode('manual')">Thủ công</button>
       </div>
+      <div class="mam-score-mode-divider"></div>
+      <div class="mam-score-mode-x2row">
+        <div class="mam-score-mode-x2label">
+          <div class="mam-score-mode-x2name">✕ 2 &nbsp;lỗ mười</div>
+          <div class="mam-score-mode-x2desc">Hiện nút X2 trong mâm và đền làng</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="x2ToggleInputGame" onchange="toggleX2SettingGame()">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="mam-score-mode-divider"></div>
+      <div class="mam-score-mode-x2row">
+        <div class="mam-score-mode-x2label">
+          <div class="mam-score-mode-x2name">Số nút điểm</div>
+          <div class="mam-score-mode-x2desc">Số nút +/− trong mâm và đền làng (tối đa 12)</div>
+        </div>
+        <div class="score-count-ctrl">
+          <button class="score-count-btn" onclick="changeScoreCount(-1)">−</button>
+          <span class="score-count-val" id="scoreCountValGame">3</span>
+          <button class="score-count-btn" onclick="changeScoreCount(1)">＋</button>
+        </div>
+      </div>
       <button class="mam-score-mode-close" onclick="closeMamScoreModeSelector()">✕</button>
     </div>
   </div>
@@ -124,16 +148,7 @@
   <!-- Mâm score panel -->
   <div class="mam-panel hidden" id="mamPanel">
     <span class="mam-panel-label">Chọn điểm</span>
-    <div class="mam-btns">
-      <button class="mam-score-btn" onclick="applyMamScore(1)">+1</button>
-      <button class="mam-score-btn" onclick="applyMamScore(2)">+2</button>
-      <button class="mam-score-btn" onclick="applyMamScore(3)">+3</button>
-    </div>
-    <div class="mam-btns">
-      <button class="mam-score-btn mam-score-neg" onclick="applyMamScore(-1)">−1</button>
-      <button class="mam-score-btn mam-score-neg" onclick="applyMamScore(-2)">−2</button>
-      <button class="mam-score-btn mam-score-neg" onclick="applyMamScore(-3)">−3</button>
-    </div>
+    <div id="mamBtnsWrap"></div>
     <div class="x2-row hidden" id="mamX2Row">
       <button class="x2-btn" id="mamX2Btn" onclick="toggleX2()">✕ 2</button>
     </div>
@@ -146,16 +161,7 @@
     <div class="den-lang-panel">
       <div class="den-lang-title">⚡ Đền Làng</div>
       <div class="den-lang-player-name" id="denLangPlayerName"></div>
-      <div class="den-lang-btns">
-        <button class="den-lang-btn den-lang-pos" onclick="applyDenLang(1)">+1</button>
-        <button class="den-lang-btn den-lang-pos" onclick="applyDenLang(2)">+2</button>
-        <button class="den-lang-btn den-lang-pos" onclick="applyDenLang(3)">+3</button>
-      </div>
-      <div class="den-lang-btns">
-        <button class="den-lang-btn den-lang-neg" onclick="applyDenLang(-1)">−1</button>
-        <button class="den-lang-btn den-lang-neg" onclick="applyDenLang(-2)">−2</button>
-        <button class="den-lang-btn den-lang-neg" onclick="applyDenLang(-3)">−3</button>
-      </div>
+      <div id="denLangBtnsWrap"></div>
       <div class="x2-row hidden" id="denLangX2Row">
         <button class="x2-btn" id="denLangX2Btn" onclick="toggleX2()">✕ 2</button>
       </div>
@@ -168,6 +174,28 @@
         </div>
       </div>
       <button class="den-lang-cancel" onclick="closeDenLangPanel()">✕</button>
+    </div>
+  </div>
+
+  <!-- Hướng dẫn nhanh khi tạo bàn -->
+  <div class="game-guide-overlay hidden" id="gameGuideOverlay" onclick="closeGameGuide()">
+    <div class="game-guide-box" onclick="event.stopPropagation()">
+      <div class="game-guide-title" id="gameGuideTitle"></div>
+      <ul class="game-guide-items" id="gameGuideItems"></ul>
+      <button class="game-guide-close" onclick="closeGameGuide()">Bắt đầu →</button>
+      <div class="game-guide-bar" id="gameGuideBar"></div>
+    </div>
+  </div>
+
+  <!-- Confirm reset overlay -->
+  <div class="confirm-overlay hidden" id="resetConfirmOverlay">
+    <div class="confirm-box">
+      <div class="confirm-icon">🔄</div>
+      <p class="confirm-msg">Reset về 0 điểm và xoá toàn bộ lịch sử?</p>
+      <div class="confirm-btns">
+        <button class="confirm-btn confirm-no" onclick="closeResetConfirm()">Không</button>
+        <button class="confirm-btn confirm-yes" onclick="doResetConfirmed()">Có</button>
+      </div>
     </div>
   </div>
 
@@ -372,69 +400,46 @@
     <div class="guide-body">
 
       <div class="guide-section">
-        <div class="guide-section-title">🎮 Chế độ chơi</div>
-        <div class="guide-item">
-          <span class="guide-tag">Race</span>
-          Dùng nút <b>+</b> / <b>−</b> để cộng hoặc trừ điểm cho từng người. Điểm không thể âm.
-        </div>
-        <div class="guide-item">
-          <span class="guide-tag">Mâm</span>
-          Chạm vào 2 thẻ người chơi để chọn cặp đấu, sau đó chọn điểm <b>+1 / +2 / +3</b> (thắng) hoặc <b>−1 / −2 / −3</b> (thua).
-        </div>
+        <div class="guide-section-title">🎱 Race</div>
+        <div class="guide-item">Nhấn <b>+</b> hoặc <b>−</b> trên thẻ của ai thì điểm người đó tăng / giảm.</div>
+        <div class="guide-item">Điểm không xuống dưới 0.</div>
       </div>
 
       <div class="guide-section">
-        <div class="guide-section-title">⚡ Đền Làng | làng Đền ⚡</div>
-        <div class="guide-item">
-          <b>Giữ 3 giây</b> vào bất kỳ thẻ người chơi nào trong chế độ Mâm để mở Đền Làng.
-        </div>
-        <div class="guide-item">
-          <span class="guide-tag guide-tag-green">+1 / +2 / +3</span>
-          Người được chọn nhận <b>Cộng điểm</b>. Mỗi người còn lại bị trừ <b>Điểm đã chọn</b>.
-        </div>
-        <div class="guide-item">
-          <span class="guide-tag guide-tag-red">−1 / −2 / −3 </span>
-          Người được chọn bị <b>Trừ Điểm</b>. Mỗi người còn lại nhận <b>Điểm đã chọn</b>.
-        </div>
+        <div class="guide-section-title">☢️ Mâm Đền — Tự động</div>
+        <div class="guide-item">Chạm lần lượt vào <b>2 thẻ</b> để chọn cặp đấu — bảng điểm hiện ra.</div>
+        <div class="guide-item"><span class="guide-tag guide-tag-green">Số dương</span> Người thứ nhất thắng, người thứ hai thua.</div>
+        <div class="guide-item"><span class="guide-tag guide-tag-red">Số âm</span> Người thứ nhất thua, người thứ hai thắng.</div>
+      </div>
+
+      <div class="guide-section">
+        <div class="guide-section-title">☢️ Mâm Đền — Thủ công</div>
+        <div class="guide-item">Nhấn <b>+</b> / <b>−</b> ngay trên thẻ để cộng hoặc trừ điểm trực tiếp.</div>
+      </div>
+
+      <div class="guide-section">
+        <div class="guide-section-title">⚡ Đền Làng</div>
+        <div class="guide-item"><b>Giữ tay 1.5 giây</b> lên bất kỳ thẻ nào → bảng Đền Làng mở ra.</div>
+        <div class="guide-item"><span class="guide-tag guide-tag-green">Số dương</span> Người được chọn <b>thu điểm</b>, tất cả người còn lại <b>mất điểm</b>.</div>
+        <div class="guide-item"><span class="guide-tag guide-tag-red">Số âm</span> Người được chọn <b>mất điểm</b>, tất cả người còn lại <b>thu điểm</b>.</div>
+        <div class="guide-item">Mục <b>Đi chấm</b>: nhập tay số điểm bất kỳ rồi chọn hướng đền.</div>
       </div>
 
       <div class="guide-section">
         <div class="guide-section-title">✕ 2 &nbsp;Lỗ Mười</div>
-        <div class="guide-item">
-          Bật trong <b>Cài đặt</b> → nút <b>✕ 2</b> xuất hiện trong Mâm và Đền Làng.
-        </div>
-        <div class="guide-item">
-          Nhấn <b>✕ 2</b> để kích hoạt (sáng vàng), rồi chọn điểm — điểm sẽ được <b>nhân đôi</b>. Tự tắt sau mỗi lần dùng.
-        </div>
+        <div class="guide-item">Bật trong <b>Cài đặt</b> — nút <b>✕2</b> hiện trong Mâm và Đền Làng.</div>
+        <div class="guide-item">Nhấn <b>✕2</b> để nó sáng lên, sau đó chọn điểm → <b>điểm nhân đôi</b>. Tự tắt sau mỗi lần.</div>
       </div>
 
       <div class="guide-section">
-        <div class="guide-section-title">↩ Ctrl + Z &nbsp;(Hoàn tác)</div>
-        <div class="guide-item">
-          Nút <b>Ctrl + Z</b> trên thanh trên xuất hiện sau mỗi lần tính điểm. Nhấn để hoàn tác lần cuối. Số trong ngoặc là số lần có thể hoàn tác.
-        </div>
+        <div class="guide-section-title">↩ Hoàn tác</div>
+        <div class="guide-item">Nút <b>Ctrl+Z</b> trên thanh trên hiện sau mỗi lần tính điểm. Nhấn để quay lại bước vừa rồi.</div>
       </div>
 
       <div class="guide-section">
-        <div class="guide-section-title">📋 Lịch Sử</div>
-        <div class="guide-item">
-          Nhấn <b>LỊCH SỬ</b> để xem toàn bộ sự kiện điểm. Sự kiện mới nhất hiển thị trên cùng, kèm số thứ tự.
-        </div>
-      </div>
-
-      <div class="guide-section">
-        <div class="guide-section-title">✏ Đổi tên người chơi</div>
-        <div class="guide-item">
-          Nhấn vào <b>tên</b> hoặc biểu tượng <b>✏</b> trên thẻ để chỉnh sửa tên. Tối đa 14 ký tự.
-        </div>
-      </div>
-
-      <div class="guide-section">
-        <div class="guide-section-title">☰ Menu</div>
-        <div class="guide-item">
-          <b>Làm mới</b> — reset điểm về 0, xoá lịch sử.<br>
-          <b>Thoát</b> — quay về màn hình chính.
-        </div>
+        <div class="guide-section-title">📋 Lịch sử &nbsp;· &nbsp;✏ Đổi tên</div>
+        <div class="guide-item">Nhấn <b>LỊCH SỬ</b> → xem toàn bộ điểm đã tính.</div>
+        <div class="guide-item">Nhấn <b>tên</b> hoặc <b>✏</b> trên thẻ → đổi tên người chơi.</div>
       </div>
 
     </div>
@@ -468,6 +473,17 @@
           <input type="checkbox" id="x2ToggleInput" onchange="toggleX2Setting()">
           <span class="toggle-slider"></span>
         </label>
+      </div>
+      <div class="settings-row">
+        <div class="settings-row-info">
+          <div class="settings-row-label">Số nút điểm</div>
+          <div class="settings-row-desc">Số nút +/− trong mâm và đền làng (tối đa 12)</div>
+        </div>
+        <div class="score-count-ctrl">
+          <button class="score-count-btn" onclick="changeScoreCount(-1)">−</button>
+          <span class="score-count-val" id="scoreCountValSettings">3</span>
+          <button class="score-count-btn" onclick="changeScoreCount(1)">＋</button>
+        </div>
       </div>
     </div>
   </div>
