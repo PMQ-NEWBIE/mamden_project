@@ -14,29 +14,39 @@
   'use strict';
 
   var ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // bỏ ký tự dễ nhầm (0/O/1/I)
-  var LS_ROOM  = 'rt_room';          // {roomId, role}
+  var LS_ROOM  = 'rt_room';          // {roomId, role, allowScoring}
   var LS_DATA  = 'rt_room_data_';    // (demo) + roomId -> payload gần nhất
+  var _ownPusherId = Math.random().toString(36).slice(2, 10); // ID phiên để lọc echo
 
   /* ── tiện ích ───────────────────────────────────────────── */
   function genRoomId() {
     var s = '';
-    for (var i = 0; i < 4; i++) s += ALPHABET[Math.floor(Math.random() * ALPHABET.length)];
-    return 'ROOM-' + s;
+    // 6 ký tự: 31^6 ≈ 887 triệu tổ hợp → chống brute-force/đoán mã
+    for (var i = 0; i < 6; i++) s += ALPHABET[Math.floor(Math.random() * ALPHABET.length)];
+    return s; // mã trần, không tiền tố ROOM-
   }
   function normalizeCode(input) {
     if (!input) return null;
     var c = String(input).trim().toUpperCase().replace(/\s+/g, '');
-    var m = c.match(/([A-Z0-9]{4})$/); // lấy 4 ký tự cuối (chấp nhận '8X3K' hoặc 'ROOM-8X3K')
-    return m ? 'ROOM-' + m[1] : null;
+    c = c.replace(/^ROOM[-_]?/, '');          // bỏ tiền tố ROOM- nếu người dùng nhập kèm (mã cũ)
+    var m = c.match(/^([A-Z0-9]{4,8})$/);     // chấp nhận 4–8 ký tự
+    return m ? m[1] : null;                    // trả về mã trần, không thêm ROOM-
   }
-  function roomUrl(id) {
-    return location.origin + location.pathname + '?room=' + id;
+  function genPin() {
+    var s = '';
+    for (var i = 0; i < 4; i++) s += Math.floor(Math.random() * 10); // mã số 4 chữ số
+    return s;
+  }
+  function roomUrl(id, allowScoring) {
+    var url = location.origin + location.pathname + '?room=' + id;
+    if (allowScoring) url += '&score=1';
+    return url;
   }
   function readPersist() {
     try { return JSON.parse(localStorage.getItem(LS_ROOM) || 'null'); } catch (_) { return null; }
   }
-  function persistRoom(id, role) {
-    try { localStorage.setItem(LS_ROOM, JSON.stringify({ roomId: id, role: role })); } catch (_) {}
+  function persistRoom(id, role, allowScoring, pin) {
+    try { localStorage.setItem(LS_ROOM, JSON.stringify({ roomId: id, role: role, allowScoring: !!allowScoring, pin: pin || null })); } catch (_) {}
   }
   function clearPersist() {
     try { localStorage.removeItem(LS_ROOM); } catch (_) {}
@@ -48,6 +58,7 @@
     var p = (g && g.players) || [];
     var payload = {
       roomId: roomId,
+      pusherId: _ownPusherId,
       updatedAt: Date.now(),
       matchStatus: g ? 'live' : 'waiting',
       state: data || null,
@@ -57,7 +68,9 @@
       player2Name:  p[1] ? p[1].name  : null,
       player2Score: p[1] ? p[1].score : null
     };
-    if (isCreate) payload.createdAt = Date.now();
+    // ownerUid chỉ gắn khi TẠO phòng (host). KHÔNG gắn ở update —
+    // nếu không, bản ghi của scorer sẽ mang uid khác chủ phòng → rules từ chối.
+    if (isCreate) { payload.createdAt = Date.now(); payload.ownerUid = _uid || null; }
     return payload;
   }
 
@@ -67,6 +80,7 @@
       name: 'firebase',
       set: function (roomId, payload) { return db.ref('rooms/' + roomId).set(payload); },
       update: function (roomId, payload) { return db.ref('rooms/' + roomId).update(payload); },
+      remove: function (roomId) { return db.ref('rooms/' + roomId).remove(); },
       subscribe: function (roomId, cb) {
         var ref = db.ref('rooms/' + roomId);
         var h = ref.on('value', function (snap) { cb(snap.val()); });
@@ -88,6 +102,10 @@
         var merged = Object.assign({}, read(roomId) || {}, payload);
         write(roomId, merged); chan(roomId).postMessage(merged); return Promise.resolve();
       },
+      remove: function (roomId) {
+        try { localStorage.removeItem(LS_DATA + roomId); } catch (_) {}
+        chan(roomId).postMessage(null); return Promise.resolve();
+      },
       subscribe: function (roomId, cb) {
         var c = chan(roomId);
         var onMsg = function (e) { cb(e.data); };
@@ -101,6 +119,8 @@
   }
 
   var provider = null;
+  var _authReady = null;   // Promise<uid|null> — resolve khi đăng nhập ẩn danh xong
+  var _uid = null;         // uid ẩn danh của phiên này
   function initProvider() {
     var cfg = window.firebaseConfig;
     var configured = cfg && typeof cfg.apiKey === 'string' && cfg.apiKey.indexOf('YOUR_') !== 0 && window.firebase;
@@ -108,6 +128,7 @@
       try {
         if (!firebase.apps.length) firebase.initializeApp(cfg);
         provider = firebaseProvider(firebase.database());
+        _initAuth();
         return;
       } catch (e) { console.warn('[realtime] Firebase init lỗi → chuyển demo nội bộ:', e && e.message); }
     }
@@ -115,83 +136,204 @@
   }
   function isFirebase() { return provider && provider.name === 'firebase'; }
 
+  /* ── Đăng nhập ẩn danh (Anonymous Auth) — cần cho Database Rules ── */
+  function _initAuth() {
+    if (!firebase.auth) { _authReady = Promise.resolve(null); return; }
+    var auth = firebase.auth();
+    _authReady = auth.signInAnonymously()
+      .then(function (cred) { _uid = cred.user.uid; return _uid; })
+      .catch(function (e) {
+        console.warn('[realtime] Anonymous auth lỗi:', e && e.message);
+        throw e;
+      });
+  }
+
+  // Đảm bảo sẵn sàng trước khi đọc/ghi DB (demo: không cần auth)
+  function ensureReady() {
+    if (!isFirebase()) return Promise.resolve(null);
+    return _authReady || Promise.resolve(null);
+  }
+
+  /* ── Tự dọn phòng: onDisconnect().remove() — phòng tự xóa khi chủ rời ──
+     Theo dõi .info/connected để TÁI đăng ký onDisconnect sau mỗi lần kết nối lại
+     (Firebase xóa handler onDisconnect sau khi reconnect). */
+  var _connWatch = null;
+  function _armHostCleanup() {
+    if (!isFirebase()) return;
+    if (_connWatch) return; // đã theo dõi
+    var db = firebase.database();
+    var ref = db.ref('.info/connected');
+    var cb = function (snap) {
+      if (snap.val() === true && RoomSync.role === 'host' && RoomSync.roomId) {
+        db.ref('rooms/' + RoomSync.roomId).onDisconnect().remove();
+      }
+    };
+    ref.on('value', cb);
+    _connWatch = function () { ref.off('value', cb); };
+  }
+  function _disarmHostCleanup(roomId) {
+    if (_connWatch) { _connWatch(); _connWatch = null; }
+    if (isFirebase() && roomId) {
+      try { firebase.database().ref('rooms/' + roomId).onDisconnect().cancel(); } catch (_) {}
+    }
+  }
+
   /* ── RoomSync (API công khai) ───────────────────────────── */
   var RoomSync = window.RoomSync = {
-    role: null,      // 'host' | 'viewer' | null
+    role: null,      // 'host' | 'viewer' | 'scorer' | null
     roomId: null,
+    allowScoring: false, // (host) đang bật cho phép người được chia sẻ ghi điểm?
+    pin: null,           // (host) mã số mật khẩu phòng đang bật (null = không khóa)
     _unsub: null,
     _gotData: false,
+    _pinOk: false,       // (viewer/scorer) đã nhập đúng mật khẩu chưa
+    _lastPayload: null,  // (viewer/scorer) payload gần nhất để xử lý lại sau khi nhập PIN
 
-    // được saveState() gọi sau mỗi thay đổi (chỉ host mới đẩy lên)
+    // được saveState() gọi sau mỗi thay đổi (host và scorer đều đẩy lên)
     _onLocalSave: function (data) {
-      if (this.role === 'host' && this.roomId && provider) {
+      if ((this.role === 'host' || this.role === 'scorer') && this.roomId && provider) {
         provider.update(this.roomId, wrapPayload(this.roomId, data, false));
       }
     },
 
     // HOST: tạo / mở lại phòng chia sẻ
     createRoom: function () {
-      if (this.role === 'viewer') this.leave(true);
+      if (this.role === 'viewer' || this.role === 'scorer') return; // không cho người được chia sẻ tạo phòng
       if (this.role === 'host' && this.roomId) { openShareModal(this.roomId); return; }
-      var id = genRoomId();
-      this.role = 'host';
-      this.roomId = id;
-      persistRoom(id, 'host');
-      var data = (typeof window.buildStateData === 'function') ? window.buildStateData() : null;
-      if (provider) provider.set(id, wrapPayload(id, data, true));
-      showHostBadge(id);
-      openShareModal(id);
+      var self = this;
+      ensureReady().then(function () {
+        var id = genRoomId();
+        self.role = 'host';
+        self.roomId = id;
+        self.allowScoring = false;
+        self.pin = null;
+        persistRoom(id, 'host', false, null);
+        var data = (typeof window.buildStateData === 'function') ? window.buildStateData() : null;
+        if (provider) provider.set(id, wrapPayload(id, data, true));
+        _armHostCleanup(); // phòng tự xóa khi chủ rời/mất kết nối
+        showHostBadge(id, self.allowScoring);
+        openShareModal(id);
+      }).catch(function () { toast('Không kết nối được máy chủ. Thử lại sau.'); });
     },
 
     // HOST khi tải lại trang: gắn lại phòng cũ và đẩy state hiện tại
-    _rehost: function (id) {
+    _rehost: function (id, allowScoring, pin) {
       this.role = 'host';
       this.roomId = id;
-      showHostBadge(id);
-      var data = (typeof window.buildStateData === 'function') ? window.buildStateData() : null;
-      if (provider && data) provider.update(id, wrapPayload(id, data, false));
+      this.allowScoring = !!allowScoring;
+      this.pin = pin || null;
+      showHostBadge(id, this.allowScoring);
+      var self = this;
+      ensureReady().then(function () {
+        if (self.role !== 'host' || self.roomId !== id) return; // đã rời phòng trong lúc chờ
+        var data = (typeof window.buildStateData === 'function') ? window.buildStateData() : null;
+        if (provider && data) provider.update(id, wrapPayload(id, data, false));
+        _armHostCleanup(); // phòng tự xóa khi chủ rời/mất kết nối
+      }).catch(function () {});
     },
 
-    // VIEWER: tham gia xem 1 phòng
-    joinRoom: function (input) {
+    // HOST: đổi trạng thái cho phép ghi điểm — push ngay lên Firebase để áp dụng tức thì
+    setAllowScoring: function (on) {
+      this.allowScoring = !!on;
+      if (this.role === 'host' && this.roomId) {
+        persistRoom(this.roomId, 'host', this.allowScoring, this.pin);
+        showHostBadge(this.roomId, this.allowScoring);
+        if (provider) provider.update(this.roomId, {
+          pusherId: _ownPusherId,
+          allowScoring: this.allowScoring,
+          updatedAt: Date.now()
+        });
+      }
+    },
+
+    // HOST: đặt / gỡ mật khẩu phòng (pin = chuỗi số, hoặc null để gỡ) — áp dụng ngay
+    setPin: function (pin) {
+      this.pin = pin || null;
+      if (this.role === 'host' && this.roomId) {
+        persistRoom(this.roomId, 'host', this.allowScoring, this.pin);
+        if (provider) provider.update(this.roomId, {
+          pusherId: _ownPusherId,
+          pin: this.pin,
+          updatedAt: Date.now()
+        });
+      }
+    },
+
+    // VIEWER / SCORER: tham gia xem (hoặc ghi điểm) 1 phòng
+    joinRoom: function (input, allowScoring) {
       var code = normalizeCode(input);
       if (!code) { toast('Mã phòng không hợp lệ'); return; }
       this.leave(true);
-      this.role = 'viewer';
+      var isScorer = !!allowScoring;
+      this.role = isScorer ? 'scorer' : 'viewer';
       this.roomId = code;
       this._gotData = false;
-      persistRoom(code, 'viewer');
-      document.body.classList.add('ro-viewer');
+      persistRoom(code, this.role, isScorer);
+      if (!isScorer) document.body.classList.add('ro-viewer');
       closeModal('rtJoinModal');
-      showViewerBadge(code);
+      showViewerBadge(code, isScorer);
       showWaiting('Đang kết nối…');
       var self = this;
-      this._unsub = provider.subscribe(code, function (payload) {
+      self._reprocess = _onPayload; // để overlay PIN gọi lại sau khi nhập đúng
+      ensureReady().then(function () {
+        if (self.roomId !== code) return; // đã rời/đổi phòng trong lúc chờ auth
+        self._unsub = provider.subscribe(code, _onPayload);
+      }).catch(function () {
+        showWaiting('Không kết nối được máy chủ.\nKiểm tra mạng rồi thử lại.');
+      });
+
+      function _onPayload(payload) {
         if (!payload) {
-          if (!self._gotData) showWaiting('Chưa có dữ liệu phòng ' + code + '.\nKiểm tra lại mã hoặc chờ chủ phòng bắt đầu.');
+          // Đã từng có dữ liệu rồi mà giờ null → phòng đã bị xóa (chủ rời/hết hạn)
+          if (self._gotData) showWaiting('Chủ phòng đã kết thúc chia sẻ.');
+          else showWaiting('Chưa có dữ liệu phòng ' + code + '.\nKiểm tra lại mã hoặc chờ chủ phòng bắt đầu.');
           return;
         }
+        // bỏ qua echo từ chính tab này
+        if (payload.pusherId === _ownPusherId) return;
         self._gotData = true;
+        self._lastPayload = payload;
         if (payload.matchStatus === 'ended') { showWaiting('Chủ phòng đã kết thúc chia sẻ.'); return; }
+
+        // Cổng mật khẩu phòng: nếu phòng có pin mà chưa nhập đúng → chặn, yêu cầu nhập
+        if (payload.pin && !self._pinOk) {
+          showPinPrompt(code, payload.pin);
+          return;
+        }
+
+        // Áp dụng thay đổi allowScoring ngay lập tức (host bật/tắt toggle)
+        if (typeof payload.allowScoring === 'boolean') {
+          var nowScorer = !!payload.allowScoring;
+          self.role = nowScorer ? 'scorer' : 'viewer';
+          document.body.classList.toggle('ro-viewer', !nowScorer);
+          persistRoom(code, self.role, nowScorer);
+          showViewerBadge(code, nowScorer);
+          var shareItem = document.getElementById('rtShareItem');
+          if (shareItem) shareItem.style.display = 'none';
+        }
+
         if (payload.state && payload.state.game) {
           hideWaiting();
           if (typeof window.applyRemoteState === 'function') window.applyRemoteState(payload.state);
         } else {
           showWaiting('Đang chờ trận bắt đầu…');
         }
-      });
+      }
     },
 
     // rời phòng (viewer) hoặc dừng chia sẻ (host)
     leave: function (silent) {
       if (this._unsub) { try { this._unsub(); } catch (_) {} this._unsub = null; }
       if (this.role === 'host' && this.roomId && provider) {
-        try { provider.update(this.roomId, { matchStatus: 'ended', updatedAt: Date.now() }); } catch (_) {}
+        _disarmHostCleanup(this.roomId);
+        try { provider.remove(this.roomId); } catch (_) {} // chủ dừng chia sẻ → xóa hẳn phòng
       }
-      this.role = null; this.roomId = null; this._gotData = false;
+      this.role = null; this.roomId = null; this.allowScoring = false; this.pin = null;
+      this._gotData = false; this._pinOk = false; this._lastPayload = null;
       clearPersist();
       document.body.classList.remove('ro-viewer');
-      hideViewerBadge(); hideHostBadge(); hideWaiting();
+      document.body.classList.remove('rt-sharing');
+      hideViewerBadge(); hideHostBadge(); hideWaiting(); hidePinPrompt();
       if (!silent) toast('Đã rời phòng');
     },
 
@@ -244,30 +386,66 @@
   /* Share modal (host) */
   function openShareModal(id) {
     var o = ensureOverlay('rtShareModal');
-    var url = roomUrl(id);
+    var allowScoring = !!RoomSync.allowScoring;
     var demo = !isFirebase();
-    o.innerHTML =
-      '<div class="rt-box">' +
-        '<button class="rt-x" data-close>✕</button>' +
-        '<div class="rt-title">📡 Chia sẻ trận đấu</div>' +
-        '<div class="rt-sub">Người khác nhập mã hoặc quét QR để XEM trực tiếp</div>' +
-        '<div class="rt-code" id="rtCodeText">' + id + '</div>' +
-        '<div class="rt-qr" id="rtQr"></div>' +
-        '<div class="rt-url" id="rtUrl">' + url + '</div>' +
-        '<div class="rt-btn-row">' +
-          '<button class="rt-btn rt-btn-gold" data-copy>📋 Copy link</button>' +
-          '<button class="rt-btn rt-btn-ghost" data-stop>Dừng chia sẻ</button>' +
-        '</div>' +
-        (demo ? '<div class="rt-note">⚠ Chế độ demo nội bộ (cùng trình duyệt). Cấu hình Firebase để xem trên thiết bị khác.</div>'
-              : '') +
-      '</div>';
-    o.classList.remove('hidden');
-    renderQR(document.getElementById('rtQr'), url);
-    o.querySelector('[data-close]').onclick = function () { o.classList.add('hidden'); };
-    o.querySelector('[data-copy]').onclick = function () { copyText(url); };
-    o.querySelector('[data-stop]').onclick = function () {
-      RoomSync.leave(false); o.classList.add('hidden');
-    };
+
+    function getUrl() { return roomUrl(id, allowScoring); }
+
+    function rebuildContent() {
+      var url = getUrl();
+      var toggled = allowScoring;
+      var pinOn = !!RoomSync.pin;
+      o.innerHTML =
+        '<div class="rt-box">' +
+          '<button class="rt-x" data-close>✕</button>' +
+          '<div class="rt-title">📡 Chia sẻ trận đấu</div>' +
+          '<div class="rt-sub">Người khác nhập mã hoặc quét QR để theo dõi trực tiếp</div>' +
+          '<div class="rt-code" id="rtCodeText" title="Nhấn đúp để copy">' + id + '</div>' +
+          '<div class="rt-qr" id="rtQr"></div>' +
+          '<div class="rt-scoring-toggle">' +
+            '<span class="rt-toggle-label">Cho phép ghi điểm</span>' +
+            '<label class="rt-switch">' +
+              '<input type="checkbox" id="rtScoringToggle"' + (toggled ? ' checked' : '') + '>' +
+              '<span class="rt-slider"></span>' +
+            '</label>' +
+          '</div>' +
+          '<div class="rt-scoring-toggle">' +
+            '<span class="rt-toggle-label">Mật khẩu phòng</span>' +
+            '<label class="rt-switch">' +
+              '<input type="checkbox" id="rtPinToggle"' + (pinOn ? ' checked' : '') + '>' +
+              '<span class="rt-slider"></span>' +
+            '</label>' +
+          '</div>' +
+          (pinOn ? '<div class="rt-pin-show" title="Nhấn đúp để copy">🔒 Mã vào phòng: <b>' + RoomSync.pin + '</b></div>' : '') +
+          '<div class="rt-btn-row">' +
+            '<button class="rt-btn rt-btn-ghost" data-stop>Dừng chia sẻ</button>' +
+            '<button class="rt-btn rt-btn-gold" data-copy>📋 Copy link</button>' +
+          '</div>' +
+          (demo ? '<div class="rt-note">⚠ Chế độ demo nội bộ (cùng trình duyệt). Cấu hình Firebase để xem trên thiết bị khác.</div>'
+                : '') +
+        '</div>';
+
+      o.classList.remove('hidden');
+      renderQR(document.getElementById('rtQr'), url);
+
+      o.querySelector('[data-close]').onclick = function () { o.classList.add('hidden'); };
+      o.querySelector('[data-stop]').onclick = function () { RoomSync.leave(false); o.classList.add('hidden'); };
+      o.querySelector('[data-copy]').onclick = function () { copyText(getUrl()); };
+      o.querySelector('#rtCodeText').ondblclick = function () { copyText(id); toast('Đã copy mã phòng'); };
+      o.querySelector('#rtScoringToggle').onchange = function () {
+        allowScoring = this.checked;
+        RoomSync.setAllowScoring(allowScoring);
+        renderQR(document.getElementById('rtQr'), getUrl());
+      };
+      o.querySelector('#rtPinToggle').onchange = function () {
+        RoomSync.setPin(this.checked ? genPin() : null);
+        rebuildContent(); // hiện/ẩn mã số
+      };
+      var pinShow = o.querySelector('.rt-pin-show');
+      if (pinShow) pinShow.ondblclick = function () { copyText(RoomSync.pin); toast('Đã copy mã vào phòng'); };
+    }
+
+    rebuildContent();
   }
 
   /* Join modal (viewer) */
@@ -279,7 +457,7 @@
         '<button class="rt-x" data-close>✕</button>' +
         '<div class="rt-title">👁 Xem trận đấu</div>' +
         '<div class="rt-sub">Nhập mã phòng được chia sẻ</div>' +
-        '<input class="rt-input" id="rtJoinInput" placeholder="VD: ROOM-8X3K" maxlength="12" autocomplete="off" />' +
+        '<input class="rt-input" id="rtJoinInput" placeholder="VD: 8X3KP2" maxlength="12" autocomplete="off" />' +
         '<div class="rt-btn-row">' +
           '<button class="rt-btn rt-btn-gold" data-join>Tham gia xem</button>' +
         '</div>' +
@@ -293,29 +471,47 @@
     input.addEventListener('keydown', function (e) { if (e.key === 'Enter') RoomSync.joinRoom(input.value); });
   }
 
-  /* Badge chủ phòng */
-  function showHostBadge(id) {
+  // Nơi đặt badge: cạnh nút LỊCH SỬ trong topbar (fallback: body)
+  function badgeParent() {
+    return document.querySelector('#screenGame .game-topbar-left') || document.body;
+  }
+
+  /* Badge chủ phòng — icon ✏️ khi cho phép ghi điểm, 📡 khi chỉ xem */
+  function showHostBadge(id, allowScoring) {
     var b = document.getElementById('rtHostBadge');
     if (!b) {
-      b = el('button', 'rt-host-badge'); b.id = 'rtHostBadge';
+      b = el('button', 'rt-host-badge'); b.id = 'rtHostBadge'; b.type = 'button';
       b.onclick = function () { openShareModal(RoomSync.roomId); };
-      document.body.appendChild(b);
     }
-    b.innerHTML = '<span class="rt-dot"></span>📡 ' + id;
+    var p = badgeParent();
+    if (b.parentNode !== p) p.appendChild(b);
+    var icon = allowScoring ? '✏️' : '📡';
+    b.innerHTML = '<span class="rt-dot"></span>' + icon + ' ' + id;
+    b.classList.toggle('rt-host-scoring', !!allowScoring);
     b.classList.add('show');
+    document.body.classList.add('rt-sharing');
   }
   function hideHostBadge() { var b = document.getElementById('rtHostBadge'); if (b) b.classList.remove('show'); }
 
-  /* Badge người xem */
-  function showViewerBadge(id) {
+  /* Badge người được chia sẻ — chỉ hiện mã phòng */
+  function showViewerBadge(id, isScorer) {
     var b = document.getElementById('rtViewerBadge');
-    if (!b) { b = el('div', 'rt-viewer-badge'); b.id = 'rtViewerBadge'; document.body.appendChild(b); }
-    b.innerHTML = '<span class="rt-dot"></span>👁 ĐANG XEM · ' + id +
-      '<button class="rt-leave" title="Rời phòng">✕</button>';
+    if (!b) { b = el('div', 'rt-viewer-badge'); b.id = 'rtViewerBadge'; }
+    var p = badgeParent();
+    if (b.parentNode !== p) p.appendChild(b);
+    b.innerHTML = '<span class="rt-dot"></span>' + id;
+    b.classList.toggle('rt-scorer-badge', !!isScorer);
     b.classList.add('show');
-    b.querySelector('.rt-leave').onclick = function () { RoomSync.leaveViewer(); };
+    document.body.classList.add('rt-sharing');
+    var shareItem = document.getElementById('rtShareItem');
+    if (shareItem) shareItem.style.display = 'none';
   }
-  function hideViewerBadge() { var b = document.getElementById('rtViewerBadge'); if (b) b.classList.remove('show'); }
+  function hideViewerBadge() {
+    var b = document.getElementById('rtViewerBadge');
+    if (b) b.classList.remove('show');
+    var shareItem = document.getElementById('rtShareItem');
+    if (shareItem) shareItem.style.display = '';
+  }
 
   /* Overlay "đang chờ" cho viewer */
   function showWaiting(msg) {
@@ -331,6 +527,42 @@
     o.classList.add('show');
   }
   function hideWaiting() { var o = document.getElementById('rtWaiting'); if (o) o.classList.remove('show'); }
+
+  /* Overlay nhập mật khẩu phòng (viewer/scorer) */
+  function showPinPrompt(code) {
+    var o = document.getElementById('rtPinModal');
+    if (!o) { o = el('div', 'rt-waiting'); o.id = 'rtPinModal'; document.body.appendChild(o); }
+    o.innerHTML =
+      '<div class="rt-waiting-box rt-pin-box">' +
+        '<div class="rt-pin-title">🔒 Phòng có mật khẩu</div>' +
+        '<div class="rt-pin-sub">Nhập mã số để vào phòng <b>' + code + '</b></div>' +
+        '<input class="rt-input rt-pin-input" id="rtPinInput" type="tel" inputmode="numeric" maxlength="8" placeholder="••••" autocomplete="off" />' +
+        '<div class="rt-pin-err" id="rtPinErr"></div>' +
+        '<div class="rt-btn-row">' +
+          '<button class="rt-btn rt-btn-ghost" data-leave>Rời phòng</button>' +
+          '<button class="rt-btn rt-btn-gold" data-ok>Vào phòng</button>' +
+        '</div>' +
+      '</div>';
+    o.classList.add('show');
+    var input = document.getElementById('rtPinInput');
+    setTimeout(function () { input && input.focus(); }, 60);
+    function verify() {
+      var expected = (RoomSync._lastPayload && RoomSync._lastPayload.pin) || '';
+      if (String(input.value).trim() === String(expected)) {
+        RoomSync._pinOk = true;
+        hidePinPrompt();
+        if (RoomSync._reprocess && RoomSync._lastPayload) RoomSync._reprocess(RoomSync._lastPayload);
+      } else {
+        var err = document.getElementById('rtPinErr');
+        if (err) err.textContent = 'Mã không đúng, thử lại.';
+        input.value = ''; input.focus();
+      }
+    }
+    o.querySelector('[data-ok]').onclick = verify;
+    o.querySelector('[data-leave]').onclick = function () { RoomSync.leaveViewer(); };
+    input.addEventListener('keydown', function (e) { if (e.key === 'Enter') verify(); });
+  }
+  function hidePinPrompt() { var o = document.getElementById('rtPinModal'); if (o) o.classList.remove('show'); }
 
   /* QR + copy */
   function renderQR(box, url) {
@@ -378,15 +610,20 @@
     initProvider();
     injectEntryPoints();
 
-    var urlRoom = null;
-    try { urlRoom = new URLSearchParams(location.search).get('room'); } catch (_) {}
+    var urlRoom = null, urlScore = false;
+    try {
+      var params = new URLSearchParams(location.search);
+      urlRoom = params.get('room');
+      urlScore = params.get('score') === '1';
+    } catch (_) {}
 
-    if (urlRoom) { RoomSync.joinRoom(urlRoom); return; }
+    if (urlRoom) { RoomSync.joinRoom(urlRoom, urlScore); return; }
 
     var saved = readPersist();
     if (saved && saved.roomId) {
-      if (saved.role === 'viewer') RoomSync.joinRoom(saved.roomId);
-      else if (saved.role === 'host') RoomSync._rehost(saved.roomId);
+      if (saved.role === 'viewer') RoomSync.joinRoom(saved.roomId, false);
+      else if (saved.role === 'scorer') RoomSync.joinRoom(saved.roomId, true);
+      else if (saved.role === 'host') RoomSync._rehost(saved.roomId, saved.allowScoring, saved.pin);
     }
   }
 
