@@ -259,7 +259,7 @@
           '<button class="rt-btn rt-btn-ghost" data-stop>Dừng chia sẻ</button>' +
         '</div>' +
         (demo ? '<div class="rt-note">⚠ Chế độ demo nội bộ (cùng trình duyệt). Cấu hình Firebase để xem trên thiết bị khác.</div>'
-              : '<div class="rt-note rt-note-ok">✓ Đang đồng bộ realtime qua Firebase</div>') +
+              : '') +
       '</div>';
     o.classList.remove('hidden');
     renderQR(document.getElementById('rtQr'), url);
