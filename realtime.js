@@ -192,8 +192,31 @@
     // được saveState() gọi sau mỗi thay đổi (host và scorer đều đẩy lên)
     _onLocalSave: function (data) {
       if ((this.role === 'host' || this.role === 'scorer') && this.roomId && provider) {
-        provider.update(this.roomId, wrapPayload(this.roomId, data, false));
+        // Loại bỏ UI interaction state trước khi đẩy lên Firebase:
+        // mamSelected (cặp đang chọn) và mamPairDelta (delta thủ công chưa chốt)
+        // là trạng thái cục bộ của từng thiết bị, không được đồng bộ.
+        var syncData = data;
+        if (data && data.game) {
+          var g = Object.assign({}, data.game);
+          delete g.mamSelected;
+          delete g.mamPairDelta;
+          syncData = Object.assign({}, data, { game: g });
+        }
+        provider.update(this.roomId, wrapPayload(this.roomId, syncData, false));
       }
+    },
+
+    // HOST subscribe nhận state từ scorer (không subscribe vào echo của chính mình)
+    _hostSubscribe: function (id) {
+      var self = this;
+      if (self._unsub) { try { self._unsub(); } catch (_) {} self._unsub = null; }
+      if (!provider) return;
+      self._unsub = provider.subscribe(id, function (payload) {
+        if (!payload || payload.pusherId === _ownPusherId) return;
+        if (payload.state && typeof window.applyRemoteState === 'function') {
+          window.applyRemoteState(payload.state);
+        }
+      });
     },
 
     // HOST: tạo / mở lại phòng chia sẻ
@@ -210,7 +233,8 @@
         persistRoom(id, 'host', false, null);
         var data = (typeof window.buildStateData === 'function') ? window.buildStateData() : null;
         if (provider) provider.set(id, wrapPayload(id, data, true));
-        _armHostCleanup(); // phòng tự xóa khi chủ rời/mất kết nối
+        _armHostCleanup();
+        self._hostSubscribe(id);
         showHostBadge(id, self.allowScoring);
         openShareModal(id);
       }).catch(function () { toast('Không kết nối được máy chủ. Thử lại sau.'); });
@@ -228,7 +252,8 @@
         if (self.role !== 'host' || self.roomId !== id) return; // đã rời phòng trong lúc chờ
         var data = (typeof window.buildStateData === 'function') ? window.buildStateData() : null;
         if (provider && data) provider.update(id, wrapPayload(id, data, false));
-        _armHostCleanup(); // phòng tự xóa khi chủ rời/mất kết nối
+        _armHostCleanup();
+        self._hostSubscribe(id);
       }).catch(function () {});
     },
 
