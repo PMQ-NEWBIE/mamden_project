@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://*.firebasedatabase.app wss://*.firebasedatabase.app https://billiard-aa067.firebaseapp.com; object-src 'none'; base-uri 'none'">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Quản trị · Mâm Đền</title>
+<link rel="icon" href="favicon.svg">
+<style>
+  :root{
+    --felt:#030305; --felt2:#08080d;
+    --gold:#b8893a; --gold2:#d4a84b; --gold3:#eecf7a; --gold-glow:rgba(184,137,58,.35);
+    --ink:#e8eef3; --muted:rgba(255,255,255,.46); --muted2:rgba(255,255,255,.28);
+    --success:#4caf50; --success2:#6ed174; --danger:#f4493a; --danger2:#ff7b6e; --info:#2196f3;
+    --s1:rgba(255,255,255,.04); --s2:rgba(255,255,255,.065); --s3:rgba(255,255,255,.1);
+    --b1:rgba(255,255,255,.09); --b2:rgba(255,255,255,.14); --bgold:rgba(184,137,58,.32);
+    --r:14px; --rs:10px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    font-family:'Montserrat',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    background:radial-gradient(120% 80% at 50% -10%, #0d0d16 0%, var(--felt2) 45%, var(--felt) 100%);
+    color:var(--ink); min-height:100%; line-height:1.5; padding:0;
+  }
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  input{font-family:inherit}
+  .hidden{display:none!important}
+  .gold-text{background:linear-gradient(180deg,var(--gold3),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+
+  /* ── Login ── */
+  #loginView{min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:24px}
+  .login-card{
+    width:100%;max-width:380px;background:linear-gradient(180deg,var(--s2),var(--s1));
+    border:1px solid var(--bgold);border-radius:var(--r);padding:32px 26px;
+    box-shadow:0 30px 80px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.05);
+  }
+  .login-logo{font-size:2.4rem;text-align:center;margin-bottom:6px}
+  .login-card h1{font-size:1.25rem;text-align:center;letter-spacing:.04em;font-weight:800}
+  .login-card .sub{text-align:center;color:var(--muted);font-size:.8rem;margin:4px 0 22px}
+  .field{margin-bottom:14px}
+  .field label{display:block;font-size:.74rem;color:var(--muted);margin-bottom:6px;letter-spacing:.04em;text-transform:uppercase}
+  .field input{
+    width:100%;padding:13px 14px;background:rgba(0,0,0,.35);border:1px solid var(--b2);
+    border-radius:var(--rs);color:var(--ink);font-size:.95rem;transition:border-color .2s,box-shadow .2s;
+  }
+  .field input:focus{outline:none;border-color:var(--gold2);box-shadow:0 0 0 3px var(--gold-glow)}
+  .btn{
+    width:100%;padding:13px;border-radius:var(--rs);font-weight:700;font-size:.95rem;letter-spacing:.03em;
+    background:linear-gradient(180deg,var(--gold2),var(--gold));color:#1a1206;
+    box-shadow:0 8px 22px rgba(184,137,58,.3);transition:transform .12s,box-shadow .2s,opacity .2s;
+  }
+  .btn:active{transform:translateY(1px)}
+  .btn:disabled{opacity:.55;cursor:not-allowed}
+  .btn-ghost{background:var(--s2);border:1px solid var(--b2);color:var(--ink);box-shadow:none}
+  .btn-danger{background:linear-gradient(180deg,var(--danger2),var(--danger));color:#fff;box-shadow:0 8px 22px rgba(244,73,58,.25)}
+  .err{color:var(--danger2);font-size:.82rem;text-align:center;margin-top:12px;min-height:1.1em}
+
+  /* ── App shell ── */
+  #appView{max-width:1160px;margin:0 auto;padding:18px 16px 60px}
+  .topbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:6px 2px 16px;border-bottom:1px solid var(--b1);margin-bottom:18px}
+  .topbar .brand{font-size:1.15rem;font-weight:800;letter-spacing:.03em}
+  .topbar .brand small{display:block;font-size:.62rem;color:var(--muted);letter-spacing:.18em;text-transform:uppercase;font-weight:600}
+  .topbar .spacer{flex:1}
+  .who{font-size:.78rem;color:var(--muted);max-width:46vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .btn-sm{width:auto;padding:8px 14px;font-size:.8rem;border-radius:var(--rs)}
+
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px}
+  .tab{padding:9px 16px;border-radius:999px;background:var(--s1);border:1px solid var(--b1);color:var(--muted);font-size:.84rem;font-weight:600;transition:all .18s}
+  .tab.active{background:linear-gradient(180deg,rgba(212,168,75,.22),rgba(184,137,58,.12));border-color:var(--bgold);color:var(--gold3)}
+  .tab:hover:not(.active){color:var(--ink);border-color:var(--b2)}
+
+  .panel{display:none}
+  .panel.active{display:block;animation:fade .25s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  .section-head{display:flex;align-items:center;gap:10px;margin:4px 0 14px;flex-wrap:wrap}
+  .section-head h2{font-size:1rem;font-weight:700;letter-spacing:.02em}
+  .section-head .spacer{flex:1}
+  .hint{color:var(--muted);font-size:.78rem}
+
+  /* ── Stat cards ── */
+  .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:24px}
+  .stat{background:linear-gradient(180deg,var(--s2),var(--s1));border:1px solid var(--b1);border-radius:var(--r);padding:16px 16px 14px;position:relative;overflow:hidden}
+  .stat::before{content:"";position:absolute;inset:0 auto auto 0;width:100%;height:2px;background:linear-gradient(90deg,var(--gold),transparent)}
+  .stat .label{font-size:.7rem;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;font-weight:600}
+  .stat .num{font-size:1.9rem;font-weight:800;margin-top:6px;line-height:1;font-variant-numeric:tabular-nums}
+  .stat .num.gold{background:linear-gradient(180deg,var(--gold3),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+
+  /* ── Bar chart ── */
+  .chart-card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);padding:18px 16px 12px;margin-bottom:22px}
+  .chart-card h3{font-size:.84rem;color:var(--muted);font-weight:600;margin-bottom:14px;letter-spacing:.04em}
+  .bars{display:flex;align-items:flex-end;gap:3px;height:150px}
+  .bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0;height:100%;justify-content:flex-end}
+  .bar{width:100%;max-width:26px;border-radius:5px 5px 2px 2px;background:linear-gradient(180deg,var(--gold2),var(--gold-dark,#7a5a1e));min-height:2px;transition:height .4s var(--ease,ease)}
+  .bar.hot{background:linear-gradient(180deg,var(--gold3),var(--gold))}
+  .bar-x{font-size:.58rem;color:var(--muted2);white-space:nowrap}
+  .bar-wrap .bval{font-size:.6rem;color:var(--muted);font-variant-numeric:tabular-nums}
+
+  /* ── Table ── */
+  .tbl-wrap{overflow-x:auto;border:1px solid var(--b1);border-radius:var(--r);background:var(--s1)}
+  table{width:100%;border-collapse:collapse;font-size:.82rem;min-width:560px}
+  th,td{padding:11px 12px;text-align:left;border-bottom:1px solid var(--b1);white-space:nowrap}
+  th{font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;background:rgba(0,0,0,.25)}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:rgba(255,255,255,.02)}
+  td.players{white-space:normal;min-width:180px}
+  .pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:.68rem;font-weight:600}
+  .pill.live{background:rgba(76,175,80,.16);color:var(--success2);border:1px solid rgba(76,175,80,.3)}
+  .pill.wait{background:rgba(33,150,243,.14);color:#7cc4f7;border:1px solid rgba(33,150,243,.3)}
+  .pill.score{background:rgba(184,137,58,.16);color:var(--gold3);border:1px solid var(--bgold)}
+  .pill.muted{background:var(--s2);color:var(--muted);border:1px solid var(--b1)}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.78rem}
+  .x-btn{width:auto;padding:6px 12px;font-size:.74rem;border-radius:8px;background:rgba(244,73,58,.12);border:1px solid rgba(244,73,58,.3);color:var(--danger2);font-weight:600}
+  .x-btn:hover{background:rgba(244,73,58,.22)}
+  .v-btn{width:auto;padding:6px 12px;font-size:.74rem;border-radius:8px;background:rgba(33,150,243,.12);border:1px solid rgba(33,150,243,.3);color:#7cc4f7;font-weight:600;margin-right:6px}
+  .v-btn:hover{background:rgba(33,150,243,.22)}
+
+  /* ── Live stat: viền phát sáng nhẹ ── */
+  .live-stat::before{background:linear-gradient(90deg,var(--success2),transparent)}
+
+  /* ── Modal xem phòng trực tiếp (god-view) ── */
+  .rv-overlay{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(0,0,0,.66);backdrop-filter:blur(4px)}
+  .rv-card{width:100%;max-width:460px;background:linear-gradient(180deg,#13131d,#0c0c12);border:1px solid var(--bgold);border-radius:var(--r);padding:18px;box-shadow:0 30px 80px rgba(0,0,0,.6);max-height:86vh;overflow:auto}
+  .rv-head{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+  .rv-title{font-weight:800;font-size:1.05rem}
+  .rv-live-dot{width:9px;height:9px;border-radius:50%;background:var(--success2);flex:none;animation:rvpulse 1.6s infinite}
+  @keyframes rvpulse{0%{box-shadow:0 0 0 0 rgba(110,209,116,.55)}70%{box-shadow:0 0 0 8px rgba(110,209,116,0)}100%{box-shadow:0 0 0 0 rgba(110,209,116,0)}}
+  .rv-meta{margin-bottom:12px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .rv-mode{font-size:.84rem;color:var(--muted);margin-bottom:12px}
+  .rv-players{display:flex;flex-direction:column;gap:8px}
+  .rv-player{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--s2);border:1px solid var(--b1);border-radius:var(--rs)}
+  .rv-pname{font-weight:700}
+  .rv-pscore{font-size:1.5rem;font-weight:800;font-variant-numeric:tabular-nums}
+  .rv-foot{margin-top:14px;text-align:center;font-size:.74rem}
+
+  .empty{padding:36px 16px;text-align:center;color:var(--muted)}
+  .empty .ico{font-size:2rem;opacity:.5;margin-bottom:8px}
+
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+  .toolbar input.num{width:70px;padding:8px 10px;background:rgba(0,0,0,.35);border:1px solid var(--b2);border-radius:8px;color:var(--ink);font-size:.85rem}
+
+  /* ── Data / danger ── */
+  .data-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:26px}
+  .danger-zone{border:1px solid rgba(244,73,58,.3);border-radius:var(--r);padding:18px;background:rgba(244,73,58,.04)}
+  .danger-zone h3{color:var(--danger2);font-size:.9rem;margin-bottom:6px}
+  .danger-zone .row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 0;border-top:1px solid var(--b1)}
+  .danger-zone .row:first-of-type{border-top:none}
+  .danger-zone .row .desc{flex:1;min-width:160px;font-size:.82rem;color:var(--muted)}
+
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:#14141c;border:1px solid var(--b2);border-radius:12px;padding:12px 20px;font-size:.85rem;box-shadow:0 16px 40px rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:all .3s var(--ease,ease);z-index:90;max-width:90vw}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast.ok{border-color:rgba(76,175,80,.4)}
+  .toast.bad{border-color:rgba(244,73,58,.45)}
+
+  .spin{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,.2);border-top-color:var(--gold2);border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+
+  @media (max-width:560px){
+    .stat .num{font-size:1.6rem}
+    .bar-x{display:none}
+  }
+</style>
+</head>
+<body>
+<div id="loginView">
+  <form class="login-card" id="loginForm" autocomplete="on">
+    <div class="login-logo">🎱</div>
+    <h1 class="gold-text">Bảng Quản Trị</h1>
+    <div class="sub">Mâm Đền · chỉ dành cho quản trị viên</div>
+    <div class="field">
+      <label for="email">Email</label>
+      <input type="email" id="email" autocomplete="username" required placeholder="admin@email.com">
+    </div>
+    <div class="field">
+      <label for="pass">Mật khẩu</label>
+      <input type="password" id="pass" autocomplete="current-password" required placeholder="••••••••">
+    </div>
+    <button class="btn" id="loginBtn" type="submit">Đăng nhập</button>
+    <div class="err" id="loginErr"></div>
+  </form>
+</div>
+<div id="appView" class="hidden">
+  <div class="topbar">
+    <div class="brand">Quản Trị Mâm Đền<small>Admin Dashboard</small></div>
+    <div class="spacer"></div>
+    <div class="who" id="whoami"></div>
+    <button class="btn btn-ghost btn-sm" id="logoutBtn" type="button">Đăng xuất</button>
+  </div>
+  <div class="tabs">
+    <button class="tab active" data-tab="traffic" type="button">📊 Truy cập</button>
+    <button class="tab" data-tab="rooms" type="button">🎱 Phòng đang mở</button>
+    <button class="tab" data-tab="kbb" type="button">✊ Kéo Búa Bao</button>
+    <button class="tab" data-tab="data" type="button">🗄️ Dữ liệu</button>
+  </div>
+  <div class="panel active" id="panel-traffic">
+    <div class="section-head">
+      <h2>🟢 Trực tiếp</h2>
+      <span class="hint">cập nhật realtime</span>
+    </div>
+    <div class="stat-grid" id="liveGrid">
+      <div class="stat live-stat"><div class="label">🟢 Đang truy cập (online)</div><div class="num gold" id="liveOnline">—</div></div>
+      <div class="stat live-stat"><div class="label">🔴 Phòng đang hoạt động</div><div class="num" id="liveActive">—</div></div>
+      <div class="stat live-stat"><div class="label">🎱 Tổng phòng đang mở</div><div class="num" id="liveRooms">—</div></div>
+      <div class="stat live-stat"><div class="label">👁 Tổng lượt truy cập</div><div class="num" id="liveVisits">—</div></div>
+    </div>
+    <div class="section-head">
+      <h2>Lượt truy cập</h2>
+      <span class="hint" id="trafficUpdated"></span>
+      <div class="spacer"></div>
+      <button class="btn btn-ghost btn-sm" id="reloadTraffic" type="button">↻ Tải lại</button>
+    </div>
+    <div class="stat-grid" id="statGrid"></div>
+    <div class="chart-card">
+      <h3>24 giờ gần nhất (theo giờ VN)</h3>
+      <div class="bars" id="chart24"></div>
+    </div>
+    <div class="chart-card">
+      <h3>30 ngày gần nhất (theo ngày)</h3>
+      <div class="bars" id="chart30"></div>
+    </div>
+  </div>
+  <div class="panel" id="panel-rooms">
+    <div class="section-head">
+      <h2>Phòng chia sẻ đang mở</h2>
+      <span class="hint" id="roomsCount"></span>
+      <div class="spacer"></div>
+      <button class="btn btn-ghost btn-sm" id="reloadRooms" type="button">↻ Tải lại</button>
+    </div>
+    <div class="toolbar">
+      <span class="hint">Xóa phòng không cập nhật quá</span>
+      <input class="num" id="staleHours" type="number" min="1" value="6">
+      <span class="hint">giờ</span>
+      <button class="btn btn-danger btn-sm" id="purgeRooms" type="button">Dọn phòng cũ</button>
+    </div>
+    <div class="tbl-wrap" id="roomsTbl"></div>
+  </div>
+  <div class="panel" id="panel-kbb">
+    <div class="section-head">
+      <h2>Phòng Kéo Búa Bao</h2>
+      <span class="hint" id="kbbCount"></span>
+      <div class="spacer"></div>
+      <button class="btn btn-ghost btn-sm" id="reloadKbb" type="button">↻ Tải lại</button>
+    </div>
+    <div class="toolbar">
+      <span class="hint">Xóa phòng tạo quá</span>
+      <input class="num" id="kbbStaleHours" type="number" min="1" value="3">
+      <span class="hint">giờ</span>
+      <button class="btn btn-danger btn-sm" id="purgeKbb" type="button">Dọn phòng cũ</button>
+    </div>
+    <div class="tbl-wrap" id="kbbTbl"></div>
+  </div>
+  <div class="panel" id="panel-data">
+    <div class="section-head">
+      <h2>Tổng quan dữ liệu</h2>
+      <div class="spacer"></div>
+      <button class="btn btn-ghost btn-sm" id="reloadData" type="button">↻ Tải lại</button>
+    </div>
+    <div class="data-grid" id="dataGrid"></div>
+    <div class="danger-zone">
+      <h3>⚠️ Vùng nguy hiểm</h3>
+      <div class="hint" style="margin-bottom:6px">Các thao tác dưới đây không thể hoàn tác.</div>
+      <div class="row">
+        <div class="desc"><b>Xóa toàn bộ phòng chia sẻ</b><br>Gỡ tất cả <span class="mono">rooms/</span></div>
+        <button class="btn btn-danger btn-sm" id="wipeRooms" type="button">Xóa hết phòng</button>
+      </div>
+      <div class="row">
+        <div class="desc"><b>Xóa toàn bộ phòng Kéo Búa Bao</b><br>Gỡ tất cả <span class="mono">kbb/</span></div>
+        <button class="btn btn-danger btn-sm" id="wipeKbb" type="button">Xóa hết KBB</button>
+      </div>
+      <div class="row">
+        <div class="desc"><b>Đặt lại thống kê truy cập</b><br>Xóa toàn bộ <span class="mono">analytics/</span></div>
+        <button class="btn btn-danger btn-sm" id="wipeAnalytics" type="button">Reset thống kê</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="roomView" class="rv-overlay hidden">
+  <div class="rv-card">
+    <div class="rv-head">
+      <span class="rv-live-dot" title="Đang xem trực tiếp — chủ phòng không phát hiện"></span>
+      <span id="rvTitle" class="rv-title">Phòng</span>
+      <div class="spacer"></div>
+      <button class="btn btn-ghost btn-sm" id="rvClose" type="button">✕ Đóng</button>
+    </div>
+    <div id="rvBody" class="rv-body"></div>
+    <div class="rv-foot hint">👁 Chế độ xem ẩn — chỉ đọc dữ liệu, chủ phòng KHÔNG nhận biết.</div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="admin.js"></script>
+</body>
+</html>
