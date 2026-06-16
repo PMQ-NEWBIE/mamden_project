@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://www.gstatic.com https://*.googleapis.com https://*.google.com https://*.firebaseio.com wss://*.firebaseio.com https://*.firebasedatabase.app wss://*.firebasedatabase.app https://billiard-aa067.firebaseapp.com; frame-src https://billiard-aa067.firebaseapp.com https://*.firebaseapp.com; object-src 'none'; base-uri 'none'">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Quản trị · Mâm Đền</title>
+<link rel="icon" href="../favicon.svg">
+<style>
+  :root{
+    --felt:#030305; --felt2:#08080d;
+    --gold:#b8893a; --gold2:#d4a84b; --gold3:#eecf7a; --gold-glow:rgba(184,137,58,.35);
+    --ink:#e8eef3; --muted:rgba(255,255,255,.46); --muted2:rgba(255,255,255,.28);
+    --mam:#ff7b6e; --race:#7cc4f7;
+    --danger:#f4493a; --danger2:#ff7b6e;
+    --s1:rgba(255,255,255,.04); --s2:rgba(255,255,255,.065);
+    --b1:rgba(255,255,255,.09); --b2:rgba(255,255,255,.14); --bgold:rgba(184,137,58,.32);
+    --r:14px; --rs:10px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    font-family:'Montserrat',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    background:radial-gradient(120% 80% at 50% -10%, #0d0d16 0%, var(--felt2) 45%, var(--felt) 100%);
+    color:var(--ink); min-height:100%; line-height:1.5;
+  }
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  input{font-family:inherit}
+  .hidden{display:none!important}
+  .gold-text{background:linear-gradient(180deg,var(--gold3),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+
+  /* ── Login ── */
+  #loginView{min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:24px}
+  .login-card{
+    width:100%;max-width:380px;background:linear-gradient(180deg,var(--s2),var(--s1));
+    border:1px solid var(--bgold);border-radius:var(--r);padding:32px 26px;
+    box-shadow:0 30px 80px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.05);
+  }
+  .login-logo{font-size:2.4rem;text-align:center;margin-bottom:6px}
+  .login-card h1{font-size:1.25rem;text-align:center;letter-spacing:.04em;font-weight:800}
+  .login-card .sub{text-align:center;color:var(--muted);font-size:.8rem;margin:4px 0 22px}
+  .field{margin-bottom:14px}
+  .field label{display:block;font-size:.74rem;color:var(--muted);margin-bottom:6px;letter-spacing:.04em;text-transform:uppercase}
+  .field input{
+    width:100%;padding:13px 14px;background:rgba(0,0,0,.35);border:1px solid var(--b2);
+    border-radius:var(--rs);color:var(--ink);font-size:.95rem;transition:border-color .2s,box-shadow .2s;
+  }
+  .field input:focus{outline:none;border-color:var(--gold2);box-shadow:0 0 0 3px var(--gold-glow)}
+  .btn{
+    width:100%;padding:13px;border-radius:var(--rs);font-weight:700;font-size:.95rem;letter-spacing:.03em;
+    background:linear-gradient(180deg,var(--gold2),var(--gold));color:#1a1206;
+    box-shadow:0 8px 22px rgba(184,137,58,.3);transition:transform .12s,box-shadow .2s,opacity .2s;
+  }
+  .btn:active{transform:translateY(1px)}
+  .btn:disabled{opacity:.55;cursor:not-allowed}
+  .btn-ghost{background:var(--s2);border:1px solid var(--b2);color:var(--ink);box-shadow:none}
+  .btn-sm{width:auto;padding:8px 14px;font-size:.8rem;border-radius:var(--rs)}
+  .err{color:var(--danger2);font-size:.82rem;text-align:center;margin-top:12px;min-height:1.1em}
+
+  /* ── App shell ── */
+  #appView{max-width:960px;margin:0 auto;padding:18px 16px 60px}
+  .topbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:6px 2px 16px;border-bottom:1px solid var(--b1);margin-bottom:22px}
+  .topbar .brand{font-size:1.15rem;font-weight:800;letter-spacing:.03em}
+  .topbar .brand small{display:block;font-size:.62rem;color:var(--muted);letter-spacing:.18em;text-transform:uppercase;font-weight:600}
+  .topbar .spacer{flex:1}
+  .who{font-size:.78rem;color:var(--muted);max-width:46vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  .section-head{display:flex;align-items:center;gap:10px;margin:6px 0 14px;flex-wrap:wrap}
+  .section-head h2{font-size:1.02rem;font-weight:700;letter-spacing:.02em}
+  .section-head .spacer{flex:1}
+  .hint{color:var(--muted);font-size:.78rem}
+
+  /* ── Stat cards ── */
+  .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:14px}
+  .stat{background:linear-gradient(180deg,var(--s2),var(--s1));border:1px solid var(--b1);border-radius:var(--r);padding:16px;position:relative;overflow:hidden}
+  .stat::before{content:"";position:absolute;inset:0 auto auto 0;width:100%;height:2px;background:linear-gradient(90deg,var(--gold),transparent)}
+  .stat .label{font-size:.7rem;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;font-weight:600}
+  .stat .num{font-size:1.95rem;font-weight:800;margin-top:6px;line-height:1;font-variant-numeric:tabular-nums}
+  .stat .num.gold{background:linear-gradient(180deg,var(--gold3),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .stat .split{font-size:.74rem;margin-top:8px;color:var(--muted)}
+  .stat .split b{font-variant-numeric:tabular-nums}
+  .stat .split .mam{color:var(--mam)}
+  .stat .split .race{color:var(--race)}
+  .stat.big::before{background:linear-gradient(90deg,var(--gold2),transparent);height:3px}
+  .stat.big .num{font-size:2.3rem}
+
+  /* ── Biểu đồ cột ── */
+  .chart-card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);padding:16px 14px 12px;margin:0 0 20px}
+  .chart-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+  .chart-head h3{font-size:.84rem;color:var(--muted);font-weight:600;letter-spacing:.03em}
+  .chart-head .spacer{flex:1}
+  .seg{display:inline-flex;background:rgba(0,0,0,.3);border:1px solid var(--b1);border-radius:999px;padding:3px;gap:2px}
+  .seg button{padding:5px 12px;border-radius:999px;font-size:.74rem;font-weight:600;color:var(--muted);transition:all .15s}
+  .seg button.active{background:linear-gradient(180deg,var(--gold2),var(--gold));color:#1a1206}
+  .legend{display:flex;gap:16px;font-size:.72rem;color:var(--muted);margin:-2px 0 12px}
+  .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+  .legend i.mam{background:var(--mam)} .legend i.race{background:var(--race)}
+  .bars{display:flex;align-items:flex-end;gap:3px;height:160px}
+  .bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0;height:100%;justify-content:flex-end}
+  .bar{width:100%;max-width:24px;border-radius:5px 5px 2px 2px;background:linear-gradient(180deg,var(--gold2),#7a5a1e);min-height:2px;transition:height .4s ease}
+  .bar.hot{background:linear-gradient(180deg,var(--gold3),var(--gold))}
+  .bar.stack{display:flex;flex-direction:column;overflow:hidden;background:none}
+  .bar.stack .bseg{width:100%}
+  .bar.stack .bseg.race{background:linear-gradient(180deg,#9ad4fb,var(--race))}
+  .bar.stack .bseg.mam{background:linear-gradient(180deg,#ff9d93,var(--mam))}
+  .bar-x{font-size:.56rem;color:var(--muted2);white-space:nowrap}
+  .bar-wrap .bval{font-size:.58rem;color:var(--muted);font-variant-numeric:tabular-nums}
+
+  .updated{font-size:.74rem;color:var(--muted2);margin:2px 0 26px}
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:#14141c;border:1px solid var(--b2);border-radius:12px;padding:12px 20px;font-size:.85rem;box-shadow:0 16px 40px rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:all .3s ease;z-index:90;max-width:90vw}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast.ok{border-color:rgba(76,175,80,.4)}
+  .toast.bad{border-color:rgba(244,73,58,.45)}
+  .spin{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,.2);border-top-color:var(--gold2);border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  @media (max-width:560px){.stat .num{font-size:1.6rem}.stat.big .num{font-size:1.9rem}.bar-x{display:none}.bars{gap:2px}}
+</style>
+</head>
+<body>
+<div id="loginView">
+  <form class="login-card" id="loginForm" autocomplete="on">
+    <div class="login-logo">🎱</div>
+    <h1 class="gold-text">Bảng Quản Trị</h1>
+    <div class="sub">Mâm Đền · chỉ dành cho quản trị viên</div>
+    <div class="field">
+      <label for="email">Email</label>
+      <input type="email" id="email" autocomplete="username" required placeholder="admin@email.com">
+    </div>
+    <div class="field">
+      <label for="pass">Mật khẩu</label>
+      <input type="password" id="pass" autocomplete="current-password" required placeholder="••••••••">
+    </div>
+    <button class="btn" id="loginBtn" type="submit">Đăng nhập</button>
+    <div class="err" id="loginErr"></div>
+  </form>
+</div>
+<div id="appView" class="hidden">
+  <div class="topbar">
+    <div class="brand">Quản Trị Mâm Đền<small>Admin Dashboard</small></div>
+    <div class="spacer"></div>
+    <div class="who" id="whoami"></div>
+    <button class="btn btn-ghost btn-sm" id="reloadBtn" type="button">↻ Tải lại</button>
+    <button class="btn btn-ghost btn-sm" id="logoutBtn" type="button">Đăng xuất</button>
+  </div>
+  <div class="section-head">
+    <h2>📊 Lượt truy cập website</h2>
+  </div>
+  <div class="stat-grid" id="visitGrid"></div>
+  <div class="chart-card">
+    <div class="chart-head">
+      <h3 id="visitChartTitle">Biểu đồ</h3>
+      <div class="spacer"></div>
+      <div class="seg" id="visitSeg">
+        <button type="button" data-vr="hour" class="active">24 giờ</button>
+        <button type="button" data-vr="day">30 ngày</button>
+        <button type="button" data-vr="month">12 tháng</button>
+      </div>
+    </div>
+    <div class="bars" id="visitChart"></div>
+  </div>
+  <div class="section-head" style="margin-top:18px">
+    <h2>🎱 Lượt tạo phòng</h2>
+  </div>
+  <div class="stat-grid" id="roomTotalGrid"></div>
+  <div class="stat-grid" id="roomWindowGrid"></div>
+  <div class="chart-card">
+    <div class="chart-head">
+      <h3 id="roomChartTitle">Biểu đồ</h3>
+      <div class="spacer"></div>
+      <div class="seg" id="roomSeg">
+        <button type="button" data-rr="hour" class="active">24 giờ</button>
+        <button type="button" data-rr="day">30 ngày</button>
+        <button type="button" data-rr="month">12 tháng</button>
+      </div>
+    </div>
+    <div class="legend"><span><i class="mam"></i>Mâm Đền</span><span><i class="race"></i>Race</span></div>
+    <div class="bars" id="roomChart"></div>
+  </div>
+  <div class="section-head" style="margin-top:18px">
+    <h2>📡 Lượt chia sẻ trận</h2>
+    <span class="hint">số lần bấm "Chia sẻ trận"</span>
+  </div>
+  <div class="stat-grid" id="shareGrid"></div>
+  <div class="chart-card">
+    <div class="chart-head">
+      <h3 id="shareChartTitle">Biểu đồ</h3>
+      <div class="spacer"></div>
+      <div class="seg" id="shareSeg">
+        <button type="button" data-sr="hour" class="active">24 giờ</button>
+        <button type="button" data-sr="day">30 ngày</button>
+        <button type="button" data-sr="month">12 tháng</button>
+      </div>
+    </div>
+    <div class="bars" id="shareChart"></div>
+  </div>
+  <div class="updated" id="updated"></div>
+</div>
+<div class="toast" id="toast"></div>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="../firebase-config.js"></script>
+<script src="../admin.js"></script>
+</body>
+</html>

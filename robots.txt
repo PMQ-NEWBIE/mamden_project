@@ -13,7 +13,6 @@ Allow: /
 
 # Chặn thư mục build / thử nghiệm nội bộ (phòng khi vô tình deploy lên public)
 Disallow: /dist/
-Disallow: /premium/
 Disallow: /node_modules/
 
 # Sitemap
