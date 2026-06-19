@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdn.jsdelivr.net https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://www.gstatic.com https://*.googleapis.com https://*.google.com https://*.firebaseio.com wss://*.firebaseio.com https://*.firebasedatabase.app wss://*.firebasedatabase.app https://billiard-aa067.firebaseapp.com; frame-src https://billiard-aa067.firebaseapp.com https://*.firebaseapp.com; object-src 'none'; base-uri 'none'" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdn.jsdelivr.net https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://www.gstatic.com https://*.googleapis.com https://*.google.com https://script.googleusercontent.com https://*.firebaseio.com wss://*.firebaseio.com https://*.firebasedatabase.app wss://*.firebasedatabase.app https://billiard-aa067.firebaseapp.com; frame-src https://billiard-aa067.firebaseapp.com https://*.firebaseapp.com; object-src 'none'; base-uri 'none'" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>Mâm Đền — App Tính Điểm Bida Online | Bảng Điểm Billiard Số</title>
   <meta name="description" content="Mâm Đền – app tính điểm bida online miễn phí: bảng điểm billiard realtime, theo dõi trận đấu, lịch sử điểm, hoàn tác, chế độ Race &amp; Mâm Đền cho 2–6 người chơi. Giao diện premium, nhanh, dễ dùng trên điện thoại." />
@@ -147,6 +147,7 @@
     <button class="btn btn-secondary btn-minigame" onclick="openMinigame()">🎲 Minigame 🎲</button>
     <button class="btn btn-secondary btn-guide" onclick="openGuide()">Hướng dẫn</button>
     <button class="btn btn-secondary" onclick="openSettings()">Cài đặt</button>
+    <button class="btn btn-secondary btn-feedback" onclick="openFeedback()">💬 Góp ý</button>
   </div>
   <div class="screen hidden" id="screenMode">
     <div class="mode-row">
@@ -536,6 +537,26 @@
           <button class="score-count-btn" onclick="changeScoreCount(1)">＋</button>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+<div class="settings-overlay hidden" id="feedbackOverlay">
+  <div class="settings-panel feedback-panel">
+    <div class="settings-header">
+      <span>💬 Góp ý</span>
+      <button class="settings-close" onclick="closeFeedback()">✕</button>
+    </div>
+    <div class="feedback-body">
+      <label class="fb-field">
+        <span class="fb-label">Tên của bạn</span>
+        <input type="text" id="fbName" class="fb-input" maxlength="40" autocomplete="name" placeholder="Nhập tên của bạn" />
+      </label>
+      <label class="fb-field">
+        <span class="fb-label">Nội dung góp ý</span>
+        <textarea id="fbContent" class="fb-input fb-textarea" maxlength="1000" rows="4" placeholder="Bạn muốn góp ý điều gì cho Mâm Đền?"></textarea>
+      </label>
+      <div class="fb-status" id="fbStatus" aria-live="polite"></div>
+      <button class="btn btn-primary fb-submit" id="fbSubmitBtn" onclick="submitFeedback()">Gửi góp ý</button>
     </div>
   </div>
 </div>
