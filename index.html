@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdn.jsdelivr.net https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://www.gstatic.com https://*.googleapis.com https://*.google.com https://script.googleusercontent.com https://*.firebaseio.com wss://*.firebaseio.com https://*.firebasedatabase.app wss://*.firebasedatabase.app https://billiard-aa067.firebaseapp.com; frame-src https://billiard-aa067.firebaseapp.com https://*.firebaseapp.com; object-src 'none'; base-uri 'none'" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdn.jsdelivr.net https://apis.google.com https://www.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://www.gstatic.com https://*.googleapis.com https://*.google.com https://script.googleusercontent.com https://*.firebaseio.com wss://*.firebaseio.com https://*.firebasedatabase.app wss://*.firebasedatabase.app https://billiard-aa067.firebaseapp.com; frame-src https://billiard-aa067.firebaseapp.com https://*.firebaseapp.com https://www.google.com; object-src 'none'; base-uri 'none'" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>Mâm Đền — App Tính Điểm Bida Online | Bảng Điểm Billiard Số</title>
   <meta name="description" content="Mâm Đền – app tính điểm bida online miễn phí: bảng điểm billiard realtime, theo dõi trận đấu, lịch sử điểm, hoàn tác, chế độ Race &amp; Mâm Đền cho 2–6 người chơi. Giao diện premium, nhanh, dễ dùng trên điện thoại." />
@@ -162,6 +162,10 @@
         <div class="mode-desc">Tính điểm mâm đền, <b>Quây</b> hoặc bị <b>Quây</b> </div>
       </div>
     </div>
+    <div class="recent-matches hidden" id="recentMatches">
+      <div class="recent-title">Trận gần đây</div>
+      <div class="recent-list" id="recentList"></div>
+    </div>
     <button class="btn btn-back btn" onclick="goHome()">← Quay lại</button>
   </div>
   <div class="screen hidden" id="screenPlayers">
@@ -283,10 +287,19 @@
   <div class="confirm-overlay hidden" id="confirmOverlay">
     <div class="confirm-box">
       <div class="confirm-icon">⚠️</div>
-      <p class="confirm-msg">Khi thoát sẽ mất hết thông tin trận đấu</p>
+      <p class="confirm-msg">Khi thoát sẽ lưu trận vào "Trận gần đây" rồi đóng bàn</p>
       <div class="confirm-btns">
         <button class="confirm-btn confirm-no" onclick="closeConfirm()">Không</button>
         <button class="confirm-btn confirm-yes" onclick="doExitGame()">Có</button>
+      </div>
+    </div>
+  </div>
+  <div class="confirm-overlay hidden" id="roomClosedOverlay">
+    <div class="confirm-box">
+      <div class="confirm-icon">🔒</div>
+      <p class="confirm-msg">Phòng đã đóng do không hoạt động trong 1 giờ.<br>Trận đã được lưu vào "Trận gần đây".</p>
+      <div class="confirm-btns">
+        <button class="confirm-btn confirm-yes" onclick="closeRoomClosedNotice()">Đã hiểu</button>
       </div>
     </div>
   </div>
@@ -559,11 +572,6 @@
       <button class="btn btn-primary fb-submit" id="fbSubmitBtn" onclick="submitFeedback()">Gửi góp ý</button>
     </div>
   </div>
-</div>
-<div class="visit-counter" id="visitCounter">
-  <span class="visit-dot"></span>
-  <span class="visit-label">Lượt truy cập</span>
-  <span class="visit-count" id="visitCount">…</span>
 </div>
 <script src="app.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js" integrity="sha384-AQ3POAMqIhwS81FrUH95ekxqBZHeP5tG2JfEL3+7GuTtfRLWnrRh32UxwzM+//A9" crossorigin="anonymous"></script>

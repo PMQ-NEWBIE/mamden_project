@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://www.gstatic.com https://*.googleapis.com https://*.google.com https://*.firebaseio.com wss://*.firebaseio.com https://*.firebasedatabase.app wss://*.firebasedatabase.app https://billiard-aa067.firebaseapp.com; frame-src https://billiard-aa067.firebaseapp.com https://*.firebaseapp.com; object-src 'none'; base-uri 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com https://www.google.com; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://www.gstatic.com https://*.googleapis.com https://*.google.com https://*.firebaseio.com wss://*.firebaseio.com https://*.firebasedatabase.app wss://*.firebasedatabase.app https://billiard-aa067.firebaseapp.com; frame-src https://billiard-aa067.firebaseapp.com https://*.firebaseapp.com https://www.google.com; object-src 'none'; base-uri 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
 <title>Quản trị · Mâm Đền</title>
@@ -106,6 +106,24 @@
   .bar.stack .bseg.mam{background:linear-gradient(180deg,#ff9d93,var(--mam))}
   .bar-x{font-size:.56rem;color:var(--muted2);white-space:nowrap}
   .bar-wrap .bval{font-size:.58rem;color:var(--muted);font-variant-numeric:tabular-nums}
+  .bars.drillable .bar-wrap{cursor:pointer}
+  .bars.drillable .bar-wrap:hover .bar{filter:brightness(1.18)}
+  .bars.drillable .bar-wrap:hover .bar-x{color:var(--gold2)}
+
+  /* ── Modal chi tiết 24 giờ ── */
+  .modal{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.62);backdrop-filter:blur(3px);animation:fadeIn .18s ease}
+  .modal[hidden]{display:none}
+  .modal-card{width:min(760px,96vw);max-height:90vh;overflow:auto;background:linear-gradient(180deg,var(--s2),var(--s1));border:1px solid var(--b2);border-radius:var(--r);padding:18px 16px 16px;box-shadow:0 30px 70px rgba(0,0,0,.6)}
+  .modal-head{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+  .modal-head h3{flex:1;font-size:.9rem;color:var(--ink);font-weight:600;letter-spacing:.02em}
+  .modal-back,.modal-close{width:30px;height:30px;border-radius:8px;color:var(--muted);line-height:1;background:rgba(255,255,255,.05);transition:all .15s;flex-shrink:0}
+  .modal-close{font-size:1.05rem}
+  .modal-back{font-size:1.4rem}
+  .modal-back[hidden]{display:none}
+  .modal-back:hover,.modal-close:hover{background:rgba(255,255,255,.12);color:var(--ink)}
+  .modal .bars{height:200px}
+  .legend[hidden]{display:none}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 
   .updated{font-size:.74rem;color:var(--muted2);margin:2px 0 26px}
   .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:#14141c;border:1px solid var(--b2);border-radius:12px;padding:12px 20px;font-size:.85rem;box-shadow:0 16px 40px rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:all .3s ease;z-index:90;max-width:90vw}
@@ -195,6 +213,17 @@
     <div class="bars" id="shareChart"></div>
   </div>
   <div class="updated" id="updated"></div>
+</div>
+<div class="modal" id="dayModal" hidden>
+  <div class="modal-card">
+    <div class="modal-head">
+      <button class="modal-back" id="dayModalBack" type="button" aria-label="Quay lại" hidden>‹</button>
+      <h3 id="dayModalTitle">Chi tiết</h3>
+      <button class="modal-close" id="dayModalClose" type="button" aria-label="Đóng">✕</button>
+    </div>
+    <div class="legend" id="dayModalLegend" hidden><span><i class="mam"></i>Mâm Đền</span><span><i class="race"></i>Race</span></div>
+    <div class="bars" id="dayModalChart"></div>
+  </div>
 </div>
 <div class="toast" id="toast"></div>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
